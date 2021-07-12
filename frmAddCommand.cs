@@ -24,9 +24,7 @@ namespace RPICommander
             Commands = commands;
             CommandsDBpath = commandsDBpath;
         }
-
-      
-
+        
         //add command to db
         private void btnSaveCommand_Click(object sender, EventArgs e)
         {
