@@ -17,17 +17,30 @@ done with C# winforms.
 ENJOY! 
 
 
-set of example commands: 
+set of example commands to start with: 
+
 Update and Upgrade sudo apt-get update && sudo apt-get upgrade -y
+
 Reboot sudo reboot
+
 Xscreenaver sudo apt-get install xscreensaver -y
+
 Samba sudo apt-get install samba samba-common-bin -y && sudo nano /etc/samba/smb.conf
+
 Pi-Hole curl -sSL https://install.pi-hole.net | bash
+
 PiVPN curl -L https://install.pivpn.io | bash
+
 Change Hostname sudo nano /etc/hostname
+
 ip to static sudo nano /etc/dhcpcd.conf
+
 ip to dhcp sudo nano /etc/dhcpcd.conf
+
 gravity update pihole -g
+
 pihole update pihole -up
+
 add vpn user pivpn -add
+
 reset pihole pass sudo pihole -a -p
