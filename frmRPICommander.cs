@@ -14,22 +14,20 @@ namespace RPICommander
 {
     public partial class frmRPICommander : Form
     {
-        private Dictionary<string, string> commands = new Dictionary<string, string>() { };
-        private List<string> devices = new List<string>();
+        private Dictionary<string, string> commands = new Dictionary<string, string>() { };//dictionary of all available commands
+        private List<string> devices = new List<string>(); // list of all available devices
 
-        private List<string> selected_commands = new List<string>();
+        private List<string> selected_commands = new List<string>(); //list of selected commands to assign for the selected device
 
-        //List<string> deviceFiles = new List<string>();
+        private List<string> batches = new List<string>();//list of paths for created batch files - for parallel running and clening up at the end
+        private List<string> commandsfiles = new List<string>();//list of paths for created text (commands) files - for clening up at the end
 
-        RadioButton current_device = new RadioButton();
-        CheckBox current_command = new CheckBox();
+        RadioButton current_device = new RadioButton(); //current device
+        CheckBox current_command = new CheckBox(); //current command
 
-        string commandsDB;
-        string devicesDB;
+        string commandsDB; //commandsDB .dat path
+        string devicesDB; //devicesDB .dat path
 
-        public Dictionary<string, string> Commands { get => commands; set => commands = value; }
-        public List<string> Devices { get => devices; set => devices = value; }
-        public List<string> Selected_commands { get => selected_commands; set => selected_commands = value; }
 
         public frmRPICommander()
         {
@@ -41,8 +39,8 @@ namespace RPICommander
         {
             flpCommands.Enabled = false;
             string dirpath = @"C:\ProgramData\RPI Commander";
-            commandsDB = dirpath + @"\Commands.dat";
-            devicesDB = dirpath + @"\Devices.dat";
+            commandsDB = dirpath + @"\commands.dat";
+            devicesDB = dirpath + @"\devices.dat";
 
             createDir(dirpath);
 
@@ -54,7 +52,7 @@ namespace RPICommander
             else
             {
                 createFile(commandsDB);//create commandsDB file if not exists;
-                addCommand(Commands, commandsDB);
+                addCommand(commands, commandsDB);
             }
 
             //read device list from DB
@@ -68,8 +66,28 @@ namespace RPICommander
                 newdevice(devicesDB); //add first device to db
             }
 
+            setCommandsFileSystemWatcher();
+            setDevicesFileSystemWatcher();
+            commandsControls(commands);
+            devicesControls(devices);
+        }
+
+        private void setCommandsFileSystemWatcher()//sets the commandsDB.dat File System Watcher
+        {
+            fileSystemWatcherCommandsWatch.Path = Directory.GetParent(commandsDB).ToString();//set file system watcher only for changes in the commandsDB file
+            fileSystemWatcherDevicesDB.Filter = Path.GetFileName(commandsDB);
+        }
+
+        private void setDevicesFileSystemWatcher()//sets the devicesDB.dat File System Watcher
+        {
+            fileSystemWatcherDevicesDB.Path = Directory.GetParent(devicesDB).ToString();//set file system watcher only for changes in the devicesDB file
+            fileSystemWatcherDevicesDB.Filter = Path.GetFileName(devicesDB);
+        }
+
+        private void commandsControls(Dictionary<string, string> commands)//creates the commands controls
+        {
             //create commands FLP controls
-            foreach (var item in Commands)
+            foreach (KeyValuePair<string, string> item in commands)
             {
                 CheckBox chkbox = new CheckBox();
                 chkbox.Name = item.Value;
@@ -78,56 +96,81 @@ namespace RPICommander
                 flpCommands.AutoScroll = true;
                 flpCommands.Controls.Add(chkbox);
             }
+        }
 
+        private void devicesControls(List<string> devices)//creates the devices controls
+        {
             //create devices FLP controls
-            foreach (string item in Devices)
+            foreach (string item in devices)
             {
+                string[] keyvalue = item.Split('^');
                 RadioButton rb = new RadioButton();
-                rb.Name = item;
-                rb.Text = item;
+                rb.Name = keyvalue[0];
+                rb.Text = keyvalue[0];
                 rb.CheckedChanged += rb_checkedchanged;
                 flpDevices.Controls.Add(rb);
             }
         }
 
-        //read commands from DB
-        public void readcommands(string db)
+        private void readcommands(string db) //read commands from DB
         {
-            using (StreamReader sr = new StreamReader(db))
+            try
             {
-                string line;
-                while ((line = sr.ReadLine()) != null)
+                using (StreamReader sr = new StreamReader(db))
                 {
-                    string[] keyvalue = line.Split('^');
-                    if (keyvalue.Length == 2)
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
                     {
-                        Commands.Add(keyvalue[0], keyvalue[1]);
+                        string[] keyvalue = line.Split('^');
+                        if (keyvalue.Length == 2)
+                        {
+                            commands.Add(keyvalue[0], keyvalue[1]);
+                        }
                     }
                 }
             }
-        }
-
-        public void readdevices(string db)
-        {
-            using (StreamReader sr = new StreamReader(db))
+            catch (IOException)
             {
-                string line;
-                while ((line = sr.ReadLine()) != null)
-                {
-                    Devices.Add(line);
-                }
+                reset();
+            }
+            catch(ArgumentException e)
+            {
+                showmessage(e.ToString());
             }
         }
 
-        //add commands to db
-        private void addCommand(Dictionary<string, string> commands, string commandsDB)
+        private void readdevices(string db)//read devices from DB
+        {
+            try
+            {
+                using (StreamReader sr = new StreamReader(db))
+                {
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        string[] device = line.Split('^');
+                        string str = device[0] + "^" + device[1] + "^" + device[2];
+                        devices.Add(str);
+                    }
+                }
+            }
+            catch (IOException)
+            {
+                reset();
+            }
+            catch (ArgumentException e)
+            {
+                showmessage(e.ToString());
+            }
+        }
+
+        private void addCommand(Dictionary<string, string> commands, string commandsDB)//add commands to DB (frmAddCommand)
         {
             frmAddCommand addcommand = new frmAddCommand(commands, commandsDB);
             addcommand.Show();
         }
 
-        //create directories
-        private void createDir(string path)
+        private void createDir(string path) //create directories
         {
             try
             {
@@ -142,8 +185,7 @@ namespace RPICommander
             }
         }
 
-        //create files
-        private void createFile(string path)
+        private void createFile(string path)//create files
         {
             try
             {
@@ -159,46 +201,77 @@ namespace RPICommander
             }
         }
 
-        //start batch
-        private void startInstall()
+        private void startInstall()//start batch
         {
             string commandsfilepath = @"C:\ProgramData\RPI Commander\" + current_device.Text + "_commands.txt";//text file to run the commands from to hold the commands for specific device
             string batch = @"C:\ProgramData\RPI Commander\" + current_device.Text + "_commands.bat";
             createFile(commandsfilepath); // checks if device file doesnt exists, and creates it if needed
+            createFile(batch);
 
-            using (StreamWriter sr = new StreamWriter(commandsfilepath))
+            batches.Add(batch);
+            commandsfiles.Add(commandsfilepath);
+            try
             {
-                foreach (string command in Selected_commands)
+                using (StreamWriter sr = new StreamWriter(commandsfilepath))//write commands to txt file
                 {
-                    sr.WriteLine(command);
+                    foreach (string command in selected_commands)
+                    {
+                        sr.WriteLine(command);
+                    }
+                }
+
+                using (StreamWriter sr = new StreamWriter(batch))//write batch file
+                {
+                    string device = "";
+                    string username = "";
+                    string password = "";
+
+                    foreach (string d in devices)
+                    {
+                        string[] device_arr = d.Split('^');
+                        if (device_arr.Length == 3)//make sure splitting done correctly
+                        {
+                            if (current_device.Text == device_arr[0])//make sure selected device is the same as intended
+                            {
+                                device = device_arr[0];
+                                username = device_arr[1];
+                                password = device_arr[2];
+                            }
+                        }
+                    }
+
+                    string sshCommand = "putty.exe -ssh " + username + "@" + device + " -pw " + password + " -m " + '\u0022' + commandsfilepath + '\u0022';
+                    sr.WriteLine(sshCommand); // write ssh command to file
                 }
             }
-            using (StreamWriter sr = new StreamWriter(batch))
+            catch (IOException)
             {
-                string username = "pi";
-                string device = current_device.Text;
-                string password = "320479";
-
-                string sshCommand = "putty.exe -ssh " + username + "@" + device + " -pw " + password + " -m " + "'\u0022'" + commandsfilepath + "'\u0022'";
-
-                "
-                foreach (string command in Selected_commands)
-                {
-                    sr.WriteLine(command);
-                }
+                reset();
             }
-            //Process.Start(filepath); // run batch file to install;
+            catch (ArgumentException e)
+            {
+                showmessage(e.ToString());
+            }
+
+            try
+            {
+                foreach (string b in batches)
+                    Process.Start(b); // run batch file to install
+            }
+            catch (Win32Exception e)
+            {
+                showmessage(e.ToString());
+            }
+            
         }
 
-        //add device to db
-        private void newdevice(string devicesDB)
+        private void newdevice(string devicesDB)//add device to db (frmAddDevice)
         {
             frmAddDevice add_device = new frmAddDevice(devicesDB);
             add_device.Show();
         }
 
-        //add command to db
-        private void newcommand(Dictionary<string, string> commands, string commandsDB)
+        private void newcommand(Dictionary<string, string> commands, string commandsDB)//add command to db
         {
             addCommand(commands, commandsDB);
         }
@@ -208,28 +281,38 @@ namespace RPICommander
             MessageBox.Show(msg);
         }
 
-        private void reset()
+        public void reset()
         {
             flpDevices.Enabled = true;
-            foreach (CheckBox c in flpCommands.Controls)
+            flpCommands.Controls.Clear();
+            flpDevices.Controls.Clear();
+            devices.Clear();
+            commands.Clear();
+            init();
+        }
+
+        private void clearfiles()//delete all txt and bat files at exit
+        {
+            foreach (string file in batches)//delete all batch files at exit
             {
-                c.Checked = false;
+                File.Delete(file);
             }
-            foreach (RadioButton rb in flpDevices.Controls)
+            foreach (string file in commandsfiles)//delete all command txt files at exit
             {
-                rb.Checked = false;
+                File.Delete(file);
             }
         }
+
         private void c_checkedchanged(object sender, EventArgs e)//checkbox state change
         {
             CheckBox c = (CheckBox)sender;
             if (c.Checked)
             {
-                Selected_commands.Add(Commands[c.Text]);//add command to selected commands
+                selected_commands.Add(commands[c.Text]);//add command to selected commands
             }
             else
             {
-                Selected_commands.Remove(Commands[c.Text]);//remove command from selected command
+                selected_commands.Remove(commands[c.Text]);//remove command from selected command
             }
         }
 
@@ -259,48 +342,53 @@ namespace RPICommander
 
         protected void btnEditDB_Click(object sender, EventArgs e)
         {
-            frmEditDBs editdb = new frmEditDBs();
+            frmEditDBs editdb = new frmEditDBs(devicesDB, commandsDB);
+            editdb.Show();
         }
 
         private void btnReset_Click(object sender, EventArgs e)
         {
             reset();
         }
+
+        private void frmRPICommander_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            clearfiles();
+        }
+
+        private void fileSystemWatcherDevicesDB_Changed(object sender, FileSystemEventArgs e)
+        {
+            foreach (string item in devices)
+            {
+                RadioButton rb = new RadioButton();
+                rb.Name = item;
+                rb.Text = item;
+                rb.CheckedChanged += rb_checkedchanged;
+
+                if (!(flpDevices.Controls.Contains(rb)))
+                {
+                    reset();
+                    return;
+                }
+            }
+        }
+
+        private void fileSystemWatcherCommandsWatch_Changed(object sender, FileSystemEventArgs e)
+        {
+            foreach (KeyValuePair<string, string> item in commands)
+            {
+                CheckBox chkbox = new CheckBox();
+                chkbox.Name = item.Value;
+                chkbox.Text = item.Key;
+                chkbox.CheckedChanged += c_checkedchanged;
+
+                if (!(flpCommands.Controls.Contains(chkbox)))
+                {
+                    reset();
+                    return;
+                }
+
+            }
+        }
     }
 }
-
-
-/*
- string changeIP = "change ip:\n interface eth0\n" + "ip_address= 192.168.0.4 / 24 \n" + "routers= 192.168.0.254\n" + "domain_name_servers= 192.168.0.254 8.8.8.8 ";
-
- commands.Add("Update & Upgrade", "sudo apt-get update && sudo apt-get upgrade -y");
- commands.Add("Reboot", "sudo reboot");
- commands.Add("Motion Eye Install", @"sudo apt - y dist - upgrade && sudo apt update && sudo apt full - upgrade - y && sudo apt - get update && sudo apt - get upgrade - y && sudo  apt - get install ffmpeg libmariadb3 libpq5 libmicrohttpd12 - y && sudo  wget https://github.com/Motion-Project/motion/releases/download/release-4.2.2/pi_buster_motion_4.2.2-1_armhf.deb && sudo dpkg -i pi_buster_motion_4.2.2-1_armhf.deb && sudo  apt-get install python-pip python-dev libssl-dev libcurl4-openssl-dev libjpeg-dev libz-dev -y && sudo  pip install motioneye && sudo  mkdir -p /etc/motioneye && sudo  cp /usr/local/share/motioneye/extra/motioneye.conf.sample /etc/motioneye/motioneye.conf && sudo  mkdir -p /var/lib/motioneye && sudo  cp /usr/local/share/motioneye/extra/motioneye.systemd-unit-local /etc/systemd/system/motioneye.service && sudo systemctl daemon-reload && sudo systemctl enable motioneye && sudo systemctl start motioneye && sudo sudo apt-get install samba samba-common-bin -y && sudo nano /etc/samba/smb.conf &&sudo smbpasswd -a pi && sudo systemctl restart smbd && pip install psutil");
- commands.Add("Xscreenaver", "sudo apt-get install xscreensaver -y");
- commands.Add("Samba", "sudo apt-get install samba samba-common-bin -y && sudo nano /etc/samba/smb.conf");
- commands.Add("Pi-Hole", "curl -sSL https://install.pi-hole.net | bash");
- commands.Add("PiVPN", "curl -L https://install.pivpn.io | bash");
- commands.Add("Change Hostname", "sudo nano /etc/hostname");
- commands.Add("ip to static", "sudo nano /etc/dhcpcd.conf");
- commands.Add("ip to dhcp", "sudo nano /etc/dhcpcd.conf");
-
- devices.Add("rpi4adblock");
- devices.Add("rpi3");
- devices.Add("rpi3bplus");
- devices.Add("rpi4");
-
- using (StreamWriter sr = new StreamWriter(@"C:\ProgramData\RPI Commander\Commands.dat"))
- {
-     foreach (KeyValuePair<string, string> kvp in commands)
-     {
-         sr.WriteLine("{0}^{1}", kvp.Key, kvp.Value);
-     }
- }
- using (StreamWriter sr = new StreamWriter(@"C:\ProgramData\RPI Commander\Devices.dat"))
- {
-     foreach (string item in devices)
-     {
-         sr.WriteLine(item);
-     }
- }
- */

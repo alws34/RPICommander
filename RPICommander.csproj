@@ -89,8 +89,12 @@
     <Compile Include="frmEditDBs.Designer.cs">
       <DependentUpon>frmEditDBs.cs</DependentUpon>
     </Compile>
+    <Compile Include="Global.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="frmEditDBs.resx">
+      <DependentUpon>frmEditDBs.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmRPICommander.resx">
       <DependentUpon>frmRPICommander.cs</DependentUpon>
     </EmbeddedResource>

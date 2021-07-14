@@ -56,7 +56,7 @@ namespace RPICommander
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 95);
+            this.label2.Location = new System.Drawing.Point(12, 42);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(54, 13);
             this.label2.TabIndex = 2;
@@ -65,14 +65,13 @@ namespace RPICommander
             // textBoxCommand
             // 
             this.textBoxCommand.Location = new System.Drawing.Point(103, 39);
-            this.textBoxCommand.Multiline = true;
             this.textBoxCommand.Name = "textBoxCommand";
-            this.textBoxCommand.Size = new System.Drawing.Size(261, 118);
+            this.textBoxCommand.Size = new System.Drawing.Size(261, 20);
             this.textBoxCommand.TabIndex = 3;
             // 
             // btnSaveCommand
             // 
-            this.btnSaveCommand.Location = new System.Drawing.Point(149, 163);
+            this.btnSaveCommand.Location = new System.Drawing.Point(144, 65);
             this.btnSaveCommand.Name = "btnSaveCommand";
             this.btnSaveCommand.Size = new System.Drawing.Size(95, 23);
             this.btnSaveCommand.TabIndex = 4;
@@ -84,7 +83,7 @@ namespace RPICommander
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(374, 198);
+            this.ClientSize = new System.Drawing.Size(370, 94);
             this.Controls.Add(this.btnSaveCommand);
             this.Controls.Add(this.textBoxCommand);
             this.Controls.Add(this.label2);

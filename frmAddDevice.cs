@@ -17,7 +17,7 @@ namespace RPICommander
         public string DevicesDBPath { get => devicesDB; set => devicesDB = value; }
         List<string> devices = new List<string>();
 
-        public frmAddDevice(string devicesDBpath)
+        public frmAddDevice(string devicesDBpath) // constructor that gets path to devices .dat file
         {
             InitializeComponent();
             DevicesDBPath = devicesDBpath;
@@ -28,15 +28,11 @@ namespace RPICommander
         {
             if (listBoxDevices.Items.Count == 0)//adding a single device
             {
-                string devicename = deviceName();
-                string userName = username();
-                string password = passWord();
-
-                string device = devicename + "^" + userName + "^" + password;
+               
 
                 using (StreamWriter sw = File.AppendText(DevicesDBPath))
                 {
-                    sw.WriteLine(device);
+                    sw.WriteLine(getdevice());
                 }
             }
             else//adding multiple devices
@@ -44,9 +40,20 @@ namespace RPICommander
                 using (StreamWriter sw = File.AppendText(DevicesDBPath))
                 {
                     foreach (string device in devices)
+
                         sw.WriteLine(device);
                 }
             }
+        }
+
+        private string getdevice()
+        {
+            string device;
+            string devicename = deviceName();
+            string userName = username();
+            string password = passWord();
+
+            return device = devicename + "^" + userName + "^" + password;
         }
 
         private void AddToList()
@@ -60,6 +67,8 @@ namespace RPICommander
                 listBoxDevices.Items.Add(devicename);
                 devices.Add(devicename + "^" + userName + "^" + password);
                 textBoxAddDeviceName.Text = "";
+                textBoxdevicePassword.Text = "";
+                textBoxdeviceUsername.Text = "";
                 btnSaveDevice.Enabled = true;
             }
             else
@@ -80,7 +89,6 @@ namespace RPICommander
         {
             return textBoxdevicePassword.Text;
         }
-
 
         /*
          * Events

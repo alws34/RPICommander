@@ -18,6 +18,7 @@ namespace RPICommander
 
         public Dictionary<string, string> Commands { get => commands; set => commands = value; }
         public string CommandsDBpath { get => commandsDBpath; set => commandsDBpath = value; }
+
         public frmAddCommand(Dictionary<string, string> commands, string commandsDBpath)
         {
             InitializeComponent();
