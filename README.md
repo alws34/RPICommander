@@ -5,6 +5,7 @@ you can download putty from here: https://www.putty.org/
 
 features:*
 *you can easily add and remove commands and devices.
-*you can easily change and edit commands and devices.
 
+
+done with C# winforms.
 ENJOY! 
