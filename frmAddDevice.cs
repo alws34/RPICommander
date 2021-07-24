@@ -23,13 +23,37 @@ namespace RPICommander
             DevicesDBPath = devicesDBpath;
             btnSaveDevice.Enabled = false;
         }
+        public frmAddDevice(string devicesDBpath, string device_name)
+        {
+            InitializeComponent();
+            DevicesDBPath = devicesDBpath;
+            try
+            {
+                using (StreamReader sr = new StreamReader(DevicesDBPath))
+                {
+                    string[] lines;
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        lines = line.Split('^');
+                        if (lines[0] == device_name)
+                        {
+                            textBoxAddDeviceName.Text = lines[0];
+                            textBoxdeviceUsername.Text = lines[1];
+                            textBoxdevicePassword.Text = lines[2];
+                        }
+                    }
+                }
+            }
+            catch (ArgumentException)
+            {
 
+            }
+        }
         private void addDevice()
         {
             if (listBoxDevices.Items.Count == 0)//adding a single device
             {
-               
-
                 using (StreamWriter sw = File.AppendText(DevicesDBPath))
                 {
                     sw.WriteLine(getdevice());

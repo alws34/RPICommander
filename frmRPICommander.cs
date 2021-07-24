@@ -22,7 +22,7 @@ namespace RPICommander
         private List<string> batches = new List<string>();//list of paths for created batch files - for parallel running and clening up at the end
         private List<string> commandsfiles = new List<string>();//list of paths for created text (commands) files - for clening up at the end
 
-        RadioButton current_device = new RadioButton(); //current device
+        private List<CheckBox> current_devices = new List<CheckBox>(); //current device
         CheckBox current_command = new CheckBox(); //current command
 
         string commandsDB; //commandsDB .dat path
@@ -37,7 +37,7 @@ namespace RPICommander
 
         private void init()
         {
-            flpCommands.Enabled = false;
+            // flpCommands.Enabled = false;
             string dirpath = @"C:\ProgramData\RPI Commander";
             commandsDB = dirpath + @"\commands.dat";
             devicesDB = dirpath + @"\devices.dat";
@@ -93,6 +93,7 @@ namespace RPICommander
                 chkbox.Name = item.Value;
                 chkbox.Text = item.Key;
                 chkbox.CheckedChanged += c_checkedchanged;
+                chkbox.MouseMove += flpDevices_MouseEnter;
                 flpCommands.AutoScroll = true;
                 flpCommands.Controls.Add(chkbox);
             }
@@ -104,11 +105,13 @@ namespace RPICommander
             foreach (string item in devices)
             {
                 string[] keyvalue = item.Split('^');
-                RadioButton rb = new RadioButton();
-                rb.Name = keyvalue[0];
-                rb.Text = keyvalue[0];
-                rb.CheckedChanged += rb_checkedchanged;
-                flpDevices.Controls.Add(rb);
+                CheckBox cb = new CheckBox();
+                cb.Name = keyvalue[0];
+                cb.Text = keyvalue[0];
+                cb.CheckedChanged += cb_checkedchanged;
+                cb.MouseMove += flpDevices_MouseEnter;
+                flpDevices.Controls.Add(cb);
+
             }
         }
 
@@ -133,9 +136,9 @@ namespace RPICommander
             {
                 reset();
             }
-            catch(ArgumentException e)
+            catch (ArgumentException e)
             {
-                showmessage(e.ToString());
+                //showmessage(e.ToString());
             }
         }
 
@@ -149,8 +152,13 @@ namespace RPICommander
                     while ((line = sr.ReadLine()) != null)
                     {
                         string[] device = line.Split('^');
-                        string str = device[0] + "^" + device[1] + "^" + device[2];
-                        devices.Add(str);
+                        if (device.Length == 3)
+                        {
+                            string str = device[0] + "^" + device[1] + "^" + device[2];
+                            devices.Add(str);
+                        }
+                        else
+                            showmessage("error reading device list! @frmRPICommander - readdevices");
                     }
                 }
             }
@@ -158,9 +166,9 @@ namespace RPICommander
             {
                 reset();
             }
-            catch (ArgumentException e)
+            catch (ArgumentException)
             {
-                showmessage(e.ToString());
+                //showmessage(e.ToString());
             }
         }
 
@@ -203,66 +211,70 @@ namespace RPICommander
 
         private void startInstall()//start batch
         {
-            string commandsfilepath = @"C:\ProgramData\RPI Commander\" + current_device.Text + "_commands.txt";//text file to run the commands from to hold the commands for specific device
-            string batch = @"C:\ProgramData\RPI Commander\" + current_device.Text + "_commands.bat";
-            createFile(commandsfilepath); // checks if device file doesnt exists, and creates it if needed
-            createFile(batch);
-
-            batches.Add(batch);
-            commandsfiles.Add(commandsfilepath);
-            try
+            foreach (CheckBox c in current_devices)
             {
-                using (StreamWriter sr = new StreamWriter(commandsfilepath))//write commands to txt file
-                {
-                    foreach (string command in selected_commands)
-                    {
-                        sr.WriteLine(command);
-                    }
-                }
+                string commandsfilepath = @"C:\ProgramData\RPI Commander\" + c.Text + "_commands.txt";//text file to run the commands from to hold the commands for specific device
+                string batch = @"C:\ProgramData\RPI Commander\" + c.Text + "_commands.bat";
 
-                using (StreamWriter sr = new StreamWriter(batch))//write batch file
-                {
-                    string device = "";
-                    string username = "";
-                    string password = "";
+                createFile(commandsfilepath); // checks if device file doesnt exists, and creates it if needed
+                createFile(batch);
 
-                    foreach (string d in devices)
+                batches.Add(batch);
+                commandsfiles.Add(commandsfilepath);
+
+                try
+                {
+                    using (StreamWriter sr = new StreamWriter(commandsfilepath))//write commands to txt file
                     {
-                        string[] device_arr = d.Split('^');
-                        if (device_arr.Length == 3)//make sure splitting done correctly
+                        foreach (string command in selected_commands)
                         {
-                            if (current_device.Text == device_arr[0])//make sure selected device is the same as intended
-                            {
-                                device = device_arr[0];
-                                username = device_arr[1];
-                                password = device_arr[2];
-                            }
+                            sr.WriteLine(command);
                         }
                     }
 
-                    string sshCommand = "putty.exe -ssh " + username + "@" + device + " -pw " + password + " -m " + '\u0022' + commandsfilepath + '\u0022';
-                    sr.WriteLine(sshCommand); // write ssh command to file
+                    using (StreamWriter sr = new StreamWriter(batch))//write batch file
+                    {
+                        string device = "";
+                        string username = "";
+                        string password = "";
+
+                        foreach (string d in devices)
+                        {
+                            string[] device_arr = d.Split('^');
+                            if (device_arr.Length == 3)//make sure splitting done correctly
+                            {
+                                if (c.Text == device_arr[0])//make sure selected device is the same as intended
+                                {
+                                    device = device_arr[0];
+                                    username = device_arr[1];
+                                    password = device_arr[2];
+                                }
+                            }
+                        }
+
+                        string sshCommand = "putty.exe -ssh " + username + "@" + device + " -pw " + password + " -m " + '\u0022' + commandsfilepath + '\u0022';
+                        sr.WriteLine(sshCommand); // write ssh command to file
+                    }
+                }
+                catch (IOException)
+                {
+                    reset();
+                }
+                catch (ArgumentException e)
+                {
+                    //showmessage(e.ToString());
+                }
+
+                try
+                {
+                    foreach (string b in batches)
+                        Process.Start(b); // run batch file to install
+                }
+                catch (Win32Exception e)
+                {
+                    showmessage(e.ToString());
                 }
             }
-            catch (IOException)
-            {
-                reset();
-            }
-            catch (ArgumentException e)
-            {
-                showmessage(e.ToString());
-            }
-
-            try
-            {
-                foreach (string b in batches)
-                    Process.Start(b); // run batch file to install
-            }
-            catch (Win32Exception e)
-            {
-                showmessage(e.ToString());
-            }
-            
         }
 
         private void newdevice(string devicesDB)//add device to db (frmAddDevice)
@@ -281,7 +293,7 @@ namespace RPICommander
             MessageBox.Show(msg);
         }
 
-        public void reset()
+        private void reset()
         {
             flpDevices.Enabled = true;
             flpCommands.Controls.Clear();
@@ -316,18 +328,18 @@ namespace RPICommander
             }
         }
 
-        private void rb_checkedchanged(object sender, EventArgs e)//radio button state changed
+        private void cb_checkedchanged(object sender, EventArgs e)//CheckBox state changed
         {
-            RadioButton r = (RadioButton)sender;
-            current_device = r;
+            CheckBox c = (CheckBox)sender;
+            current_devices.Add(c); // add device to ssh intended devices list
             flpCommands.Enabled = true;//be able to choose commands only after a device been chosen
-            flpDevices.Enabled = false;
+            //flpDevices.Enabled = false;
         }
 
         private void btnStart_Click(object sender, EventArgs e)//start install
         {
             startInstall();
-            flpDevices.Enabled = true;
+            //flpDevices.Enabled = true;
         }
 
         protected void btnAddDevice_Click(object sender, EventArgs e)
@@ -360,12 +372,12 @@ namespace RPICommander
         {
             foreach (string item in devices)
             {
-                RadioButton rb = new RadioButton();
-                rb.Name = item;
-                rb.Text = item;
-                rb.CheckedChanged += rb_checkedchanged;
-
-                if (!(flpDevices.Controls.Contains(rb)))
+                CheckBox cb = new CheckBox();
+                cb.Name = item;
+                cb.Text = item;
+                cb.CheckedChanged += cb_checkedchanged;
+                cb.MouseMove += flpDevices_MouseEnter;
+                if (!(flpDevices.Controls.Contains(cb)))
                 {
                     reset();
                     return;
@@ -389,6 +401,12 @@ namespace RPICommander
                 }
 
             }
+        }
+
+        private void flpDevices_MouseEnter(object sender, EventArgs e)
+        {
+            CheckBox c = (CheckBox)sender;
+            toolTip1.SetToolTip(c, c.Name);
         }
     }
 }

@@ -151,6 +151,8 @@ namespace RPICommander
         {
             if (listBoxCommands.SelectedItem != null)
             {
+                Form edit_command = new frmAddCommand(commandsDBpath, listBoxCommands.SelectedItem.ToString());
+                edit_command.Show();
                 commands.Remove(listBoxCommands.SelectedItem.ToString());
                 listBoxCommands.Items.RemoveAt(listBoxCommands.SelectedIndex);
             }
@@ -160,6 +162,8 @@ namespace RPICommander
         {
             if (listBoxDevices.SelectedItem != null )
             {
+                Form edit_device = new frmAddDevice(devicesDBpath, listBoxDevices.SelectedItem.ToString());
+                edit_device.Show();
                 devices.Remove(listBoxDevices.SelectedItem.ToString());
                 listBoxDevices.Items.RemoveAt(listBoxDevices.SelectedIndex);
             }

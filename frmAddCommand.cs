@@ -25,7 +25,37 @@ namespace RPICommander
             Commands = commands;
             CommandsDBpath = commandsDBpath;
         }
-        
+        public frmAddCommand(string path, string command)
+        {
+            InitializeComponent();
+            commandsDBpath = path;
+            try
+            {
+                using (StreamReader sr = new StreamReader(commandsDBpath))
+                {
+                    string[] lines;
+                    string line;
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        lines = line.Split('^');
+                        if (lines[0] == command)
+                        {
+                            textBoxCommandName.Text = lines[0];
+                            textBoxCommand.Text = lines[1];
+                        }
+                    }
+                }
+            }catch(ArgumentException)
+            {
+                showmessage("this command already exists in db");
+            }
+            
+        }
+
+        private void showmessage(string msg)
+        {
+            MessageBox.Show(msg);
+        }
         //add command to db
         private void btnSaveCommand_Click(object sender, EventArgs e)
         {
