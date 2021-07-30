@@ -52,7 +52,7 @@ namespace RPICommander
             else
             {
                 createFile(commandsDB);//create commandsDB file if not exists;
-                addCommand(commands, commandsDB);
+                addCommand(commandsDB);
             }
 
             //read device list from DB
@@ -93,7 +93,7 @@ namespace RPICommander
                 chkbox.Name = item.Value;
                 chkbox.Text = item.Key;
                 chkbox.CheckedChanged += c_checkedchanged;
-                chkbox.MouseMove += flpDevices_MouseEnter;
+                chkbox.MouseMove += flpDevices_MouseMove;
                 flpCommands.AutoScroll = true;
                 flpCommands.Controls.Add(chkbox);
             }
@@ -109,9 +109,8 @@ namespace RPICommander
                 cb.Name = keyvalue[0];
                 cb.Text = keyvalue[0];
                 cb.CheckedChanged += cb_checkedchanged;
-                cb.MouseMove += flpDevices_MouseEnter;
+                cb.MouseMove += flpDevices_MouseMove;
                 flpDevices.Controls.Add(cb);
-
             }
         }
 
@@ -157,8 +156,8 @@ namespace RPICommander
                             string str = device[0] + "^" + device[1] + "^" + device[2];
                             devices.Add(str);
                         }
-                        else
-                            showmessage("error reading device list! @frmRPICommander - readdevices");
+                        //else
+                        //    showmessage("error reading device list! @frmRPICommander - readdevices");
                     }
                 }
             }
@@ -172,9 +171,9 @@ namespace RPICommander
             }
         }
 
-        private void addCommand(Dictionary<string, string> commands, string commandsDB)//add commands to DB (frmAddCommand)
+        private void addCommand(string commandsDB)//add commands to DB (frmAddCommand)
         {
-            frmAddCommand addcommand = new frmAddCommand(commands, commandsDB);
+            frmAddCommand addcommand = new frmAddCommand( commandsDB);
             addcommand.Show();
         }
 
@@ -283,10 +282,6 @@ namespace RPICommander
             add_device.Show();
         }
 
-        private void newcommand(Dictionary<string, string> commands, string commandsDB)//add command to db
-        {
-            addCommand(commands, commandsDB);
-        }
 
         private void showmessage(string msg)
         {
@@ -349,7 +344,7 @@ namespace RPICommander
 
         protected void btnAddCommand_Click(object sender, EventArgs e)
         {
-            newcommand(commands, commandsDB);
+            addCommand(commandsDB);
         }
 
         protected void btnEditDB_Click(object sender, EventArgs e)
@@ -376,7 +371,7 @@ namespace RPICommander
                 cb.Name = item;
                 cb.Text = item;
                 cb.CheckedChanged += cb_checkedchanged;
-                cb.MouseMove += flpDevices_MouseEnter;
+                cb.MouseMove += flpDevices_MouseMove;
                 if (!(flpDevices.Controls.Contains(cb)))
                 {
                     reset();
@@ -403,10 +398,12 @@ namespace RPICommander
             }
         }
 
-        private void flpDevices_MouseEnter(object sender, EventArgs e)
+        private void flpDevices_MouseMove(object sender, EventArgs e)
         {
             CheckBox c = (CheckBox)sender;
+            toolTip1.IsBalloon = true;
             toolTip1.SetToolTip(c, c.Name);
+
         }
     }
 }

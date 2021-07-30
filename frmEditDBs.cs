@@ -15,8 +15,7 @@ namespace RPICommander
     {
         private Dictionary<string, string> commands = new Dictionary<string, string>() { };//dictionary of all available commands
         private List<string> devices = new List<string>(); // list of all available devices
-        string devicesDBpath, commandsDBpath;
-
+        string devicesDBpath, commandsDBpath, current_device, current_command;
         public frmEditDBs(string devicesdb, string commandsdb)
         {
             InitializeComponent();
@@ -129,49 +128,51 @@ namespace RPICommander
                 MessageBox.Show(e.ToString());
             }
         }
-        private void saveChanges()
-        {
-            using (StreamWriter sw = new StreamWriter(devicesDBpath))
-            {
-                foreach(string device in devices)
-                {
-                    sw.WriteLine(device);
-                }
-            }
-            using (StreamWriter sw = new StreamWriter(commandsDBpath))
-            {
-                foreach(KeyValuePair<string,string> command in commands)
-                {
-                    sw.WriteLine("{0}^{1}", command.Key, command.Value);
-                }
-            }
-        }
+        //private void saveChanges()
+        //{
+        //    using (StreamWriter sw = File.AppendText(devicesDBpath))
+        //    {
+        //        foreach (string device in devices)
+        //        {
+        //            sw.WriteLine(device);
+        //        }
+        //    }
+        //    using (StreamWriter sw = File.AppendText(commandsDBpath))
+        //    {
+        //        foreach (KeyValuePair<string, string> command in commands)
+        //        {
+        //            sw.WriteLine("{0}^{1}", command.Key, command.Value);
+        //        }
+        //    }
+        //}
 
         private void listBoxCommands_DoubleClick(object sender, EventArgs e)//double click event on commands list item
         {
-            if (listBoxCommands.SelectedItem != null)
+            current_command = listBoxCommands.SelectedItem.ToString();
+            if (current_command != null)
             {
-                Form edit_command = new frmAddCommand(commandsDBpath, listBoxCommands.SelectedItem.ToString());
-                edit_command.Show();
-                commands.Remove(listBoxCommands.SelectedItem.ToString());
+                commands.Remove(current_command);
                 listBoxCommands.Items.RemoveAt(listBoxCommands.SelectedIndex);
+                Form edit_command = new frmAddCommand(commandsDBpath, current_command);
+                edit_command.Show();
             }
         }
-       
+
         private void listBoxDevices_DoubleClick(object sender, EventArgs e)//double click event on devicess list item
         {
-            if (listBoxDevices.SelectedItem != null )
+            current_device = listBoxDevices.SelectedItem.ToString();
+            if (current_device != null)
             {
-                Form edit_device = new frmAddDevice(devicesDBpath, listBoxDevices.SelectedItem.ToString());
-                edit_device.Show();
-                devices.Remove(listBoxDevices.SelectedItem.ToString());
+                devices.Remove(current_device);
                 listBoxDevices.Items.RemoveAt(listBoxDevices.SelectedIndex);
+                Form edit_device = new frmAddDevice(devicesDBpath, current_device);
+                edit_device.Show();
             }
         }
 
         private void btnSaveChanges_Click(object sender, EventArgs e)
         {
-            saveChanges();
+            //saveChanges();
             Dispose();
         }
     }
