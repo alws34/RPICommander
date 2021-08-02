@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("RPI Commander")]
-[assembly: AssemblyDescription("Rapberry pi automated SSH commands tool - to control multiple RPIs on your network.")]
+[assembly: AssemblyDescription("Rapberry pi automated SSH commands tool - to control multiple RPIs on your network with ease.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("alws34")]
 [assembly: AssemblyProduct("RPICommander")]
@@ -33,4 +33,4 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyFileVersion("1.3.3.0")]
