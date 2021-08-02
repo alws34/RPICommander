@@ -50,94 +50,97 @@ namespace RPICommander
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 16);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.Location = new System.Drawing.Point(12, 8);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(78, 17);
+            this.label1.Size = new System.Drawing.Size(98, 20);
             this.label1.TabIndex = 1;
             this.label1.Text = "Commands";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(547, 16);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.Location = new System.Drawing.Point(410, 8);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(51, 17);
+            this.label2.Size = new System.Drawing.Size(63, 20);
             this.label2.TabIndex = 2;
             this.label2.Text = "Device";
             // 
             // flpCommands
             // 
             this.flpCommands.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.flpCommands.Location = new System.Drawing.Point(16, 36);
-            this.flpCommands.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.flpCommands.Location = new System.Drawing.Point(12, 29);
             this.flpCommands.Name = "flpCommands";
-            this.flpCommands.Size = new System.Drawing.Size(404, 503);
+            this.flpCommands.Size = new System.Drawing.Size(303, 409);
             this.flpCommands.TabIndex = 30;
             // 
             // flpDevices
             // 
             this.flpDevices.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.flpDevices.Location = new System.Drawing.Point(551, 36);
-            this.flpDevices.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.flpDevices.Location = new System.Drawing.Point(413, 29);
             this.flpDevices.Name = "flpDevices";
-            this.flpDevices.Size = new System.Drawing.Size(248, 506);
+            this.flpDevices.Size = new System.Drawing.Size(186, 411);
             this.flpDevices.TabIndex = 31;
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(428, 36);
-            this.btnStart.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnStart.BackColor = System.Drawing.Color.DarkGray;
+            this.btnStart.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnStart.Location = new System.Drawing.Point(321, 224);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(115, 28);
+            this.btnStart.Size = new System.Drawing.Size(86, 96);
             this.btnStart.TabIndex = 32;
             this.btnStart.Text = "GO";
-            this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.UseVisualStyleBackColor = false;
             this.btnStart.Click += new System.EventHandler(this.btnStart_Click);
             // 
             // btnAddCommand
             // 
-            this.btnAddCommand.Location = new System.Drawing.Point(428, 437);
-            this.btnAddCommand.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnAddCommand.BackColor = System.Drawing.Color.DarkGray;
+            this.btnAddCommand.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnAddCommand.Location = new System.Drawing.Point(321, 355);
             this.btnAddCommand.Name = "btnAddCommand";
-            this.btnAddCommand.Size = new System.Drawing.Size(115, 28);
+            this.btnAddCommand.Size = new System.Drawing.Size(86, 23);
             this.btnAddCommand.TabIndex = 33;
             this.btnAddCommand.Text = "Add Command";
-            this.btnAddCommand.UseVisualStyleBackColor = true;
+            this.btnAddCommand.UseVisualStyleBackColor = false;
             this.btnAddCommand.Click += new System.EventHandler(this.btnAddCommand_Click);
             // 
             // btnAddDevice
             // 
-            this.btnAddDevice.Location = new System.Drawing.Point(428, 401);
-            this.btnAddDevice.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnAddDevice.BackColor = System.Drawing.Color.DarkGray;
+            this.btnAddDevice.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnAddDevice.Location = new System.Drawing.Point(321, 326);
             this.btnAddDevice.Name = "btnAddDevice";
-            this.btnAddDevice.Size = new System.Drawing.Size(115, 28);
+            this.btnAddDevice.Size = new System.Drawing.Size(86, 23);
             this.btnAddDevice.TabIndex = 34;
             this.btnAddDevice.Text = "Add Device";
-            this.btnAddDevice.UseVisualStyleBackColor = true;
+            this.btnAddDevice.UseVisualStyleBackColor = false;
             this.btnAddDevice.Click += new System.EventHandler(this.btnAddDevice_Click);
             // 
             // btnEditDB
             // 
-            this.btnEditDB.Location = new System.Drawing.Point(428, 473);
-            this.btnEditDB.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnEditDB.BackColor = System.Drawing.Color.DarkGray;
+            this.btnEditDB.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnEditDB.Location = new System.Drawing.Point(321, 384);
             this.btnEditDB.Name = "btnEditDB";
-            this.btnEditDB.Size = new System.Drawing.Size(115, 28);
+            this.btnEditDB.Size = new System.Drawing.Size(86, 23);
             this.btnEditDB.TabIndex = 35;
             this.btnEditDB.Text = "Edit DBs";
-            this.btnEditDB.UseVisualStyleBackColor = true;
+            this.btnEditDB.UseVisualStyleBackColor = false;
             this.btnEditDB.Click += new System.EventHandler(this.btnEditDB_Click);
             // 
             // btnReset
             // 
-            this.btnReset.Location = new System.Drawing.Point(428, 508);
-            this.btnReset.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnReset.BackColor = System.Drawing.Color.DarkGray;
+            this.btnReset.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnReset.Location = new System.Drawing.Point(321, 413);
             this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(115, 28);
+            this.btnReset.Size = new System.Drawing.Size(86, 23);
             this.btnReset.TabIndex = 36;
             this.btnReset.Text = "Reset Form";
-            this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.UseVisualStyleBackColor = false;
             this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
             // fileSystemWatcherCommandsWatch
@@ -154,9 +157,10 @@ namespace RPICommander
             // 
             // frmRPICommander
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(815, 554);
+            this.BackColor = System.Drawing.SystemColors.ControlLight;
+            this.ClientSize = new System.Drawing.Size(611, 450);
             this.Controls.Add(this.btnReset);
             this.Controls.Add(this.btnEditDB);
             this.Controls.Add(this.btnAddDevice);
@@ -168,7 +172,6 @@ namespace RPICommander
             this.Controls.Add(this.label1);
             this.DoubleBuffered = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
             this.Name = "frmRPICommander";
             this.Text = "RPI Commander";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmRPICommander_FormClosing);

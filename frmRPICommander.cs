@@ -28,6 +28,8 @@ namespace RPICommander
         string commandsDB; //commandsDB .dat path
         string devicesDB; //devicesDB .dat path
 
+        private int lastX;
+        private int lastY;
 
         public frmRPICommander()
         {
@@ -173,7 +175,7 @@ namespace RPICommander
 
         private void addCommand(string commandsDB)//add commands to DB (frmAddCommand)
         {
-            frmAddCommand addcommand = new frmAddCommand( commandsDB);
+            frmAddCommand addcommand = new frmAddCommand(commandsDB);
             addcommand.Show();
         }
 
@@ -398,12 +400,17 @@ namespace RPICommander
             }
         }
 
-        private void flpDevices_MouseMove(object sender, EventArgs e)
+        private void flpDevices_MouseMove(object sender, MouseEventArgs e)
         {
-            CheckBox c = (CheckBox)sender;
-            toolTip1.IsBalloon = true;
-            toolTip1.SetToolTip(c, c.Name);
+            if (e.X != this.lastX || e.Y != this.lastY)
+            {
+                CheckBox c = (CheckBox)sender;
+                toolTip1.IsBalloon = true;
+                toolTip1.SetToolTip(c, c.Text + "\n" + c.Name);
 
+                this.lastX = e.X;
+                this.lastY = e.Y;
+            }
         }
     }
 }
