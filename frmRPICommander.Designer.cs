@@ -80,14 +80,14 @@ namespace RPICommander
             this.flpDevices.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.flpDevices.Location = new System.Drawing.Point(413, 29);
             this.flpDevices.Name = "flpDevices";
-            this.flpDevices.Size = new System.Drawing.Size(186, 411);
+            this.flpDevices.Size = new System.Drawing.Size(186, 409);
             this.flpDevices.TabIndex = 31;
             // 
             // btnStart
             // 
             this.btnStart.BackColor = System.Drawing.Color.DarkGray;
             this.btnStart.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnStart.Location = new System.Drawing.Point(321, 224);
+            this.btnStart.Location = new System.Drawing.Point(321, 155);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(86, 96);
             this.btnStart.TabIndex = 32;
@@ -99,9 +99,9 @@ namespace RPICommander
             // 
             this.btnAddCommand.BackColor = System.Drawing.Color.DarkGray;
             this.btnAddCommand.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAddCommand.Location = new System.Drawing.Point(321, 355);
+            this.btnAddCommand.Location = new System.Drawing.Point(321, 305);
             this.btnAddCommand.Name = "btnAddCommand";
-            this.btnAddCommand.Size = new System.Drawing.Size(86, 23);
+            this.btnAddCommand.Size = new System.Drawing.Size(86, 40);
             this.btnAddCommand.TabIndex = 33;
             this.btnAddCommand.Text = "Add Command";
             this.btnAddCommand.UseVisualStyleBackColor = false;
@@ -111,9 +111,9 @@ namespace RPICommander
             // 
             this.btnAddDevice.BackColor = System.Drawing.Color.DarkGray;
             this.btnAddDevice.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnAddDevice.Location = new System.Drawing.Point(321, 326);
+            this.btnAddDevice.Location = new System.Drawing.Point(321, 257);
             this.btnAddDevice.Name = "btnAddDevice";
-            this.btnAddDevice.Size = new System.Drawing.Size(86, 23);
+            this.btnAddDevice.Size = new System.Drawing.Size(86, 42);
             this.btnAddDevice.TabIndex = 34;
             this.btnAddDevice.Text = "Add Device";
             this.btnAddDevice.UseVisualStyleBackColor = false;
@@ -123,9 +123,9 @@ namespace RPICommander
             // 
             this.btnEditDB.BackColor = System.Drawing.Color.DarkGray;
             this.btnEditDB.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnEditDB.Location = new System.Drawing.Point(321, 384);
+            this.btnEditDB.Location = new System.Drawing.Point(321, 351);
             this.btnEditDB.Name = "btnEditDB";
-            this.btnEditDB.Size = new System.Drawing.Size(86, 23);
+            this.btnEditDB.Size = new System.Drawing.Size(86, 40);
             this.btnEditDB.TabIndex = 35;
             this.btnEditDB.Text = "Edit DBs";
             this.btnEditDB.UseVisualStyleBackColor = false;
@@ -135,9 +135,9 @@ namespace RPICommander
             // 
             this.btnReset.BackColor = System.Drawing.Color.DarkGray;
             this.btnReset.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnReset.Location = new System.Drawing.Point(321, 413);
+            this.btnReset.Location = new System.Drawing.Point(321, 397);
             this.btnReset.Name = "btnReset";
-            this.btnReset.Size = new System.Drawing.Size(86, 23);
+            this.btnReset.Size = new System.Drawing.Size(86, 42);
             this.btnReset.TabIndex = 36;
             this.btnReset.Text = "Reset Form";
             this.btnReset.UseVisualStyleBackColor = false;
@@ -162,8 +162,8 @@ namespace RPICommander
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(611, 450);
             this.Controls.Add(this.btnReset);
-            this.Controls.Add(this.btnEditDB);
             this.Controls.Add(this.btnAddDevice);
+            this.Controls.Add(this.btnEditDB);
             this.Controls.Add(this.btnAddCommand);
             this.Controls.Add(this.btnStart);
             this.Controls.Add(this.flpDevices);
