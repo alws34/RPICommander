@@ -161,6 +161,7 @@ namespace RPICommander
                         //else
                         //    showmessage("error reading device list! @frmRPICommander - readdevices");
                     }
+                    devices.Sort();
                 }
             }
             catch (IOException)
