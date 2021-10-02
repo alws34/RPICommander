@@ -39,7 +39,7 @@ namespace RPICommander
             // btnSaveChanges
             // 
             this.btnSaveChanges.Location = new System.Drawing.Point(169, 224);
-            this.btnSaveChanges.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.btnSaveChanges.Margin = new System.Windows.Forms.Padding(4);
             this.btnSaveChanges.Name = "btnSaveChanges";
             this.btnSaveChanges.Size = new System.Drawing.Size(115, 28);
             this.btnSaveChanges.TabIndex = 37;
@@ -97,9 +97,9 @@ namespace RPICommander
             this.Controls.Add(this.btnSaveChanges);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "frmEditDBs";
-            this.Text = "frmEditDBs";
+            this.Text = "Edit DB";
             this.ResumeLayout(false);
             this.PerformLayout();
 

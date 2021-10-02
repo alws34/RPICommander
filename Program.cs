@@ -16,7 +16,7 @@ namespace RPICommander
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new frmRPICommander());
+            Application.Run(new FrmRPICommander());
         }
     }
 }
