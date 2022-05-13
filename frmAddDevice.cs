@@ -46,7 +46,7 @@ namespace RPICommander
                     while ((line = sr.ReadLine()) != null)
                     {
                         lines = line.Split('^');
-                        if (lines.Length == 3)
+                        if (lines.Length == 4)
                         {
                             if (lines[0] != device_name)//add to list all devices from existing db except editable device
                                 devices.Add(line);
@@ -55,6 +55,7 @@ namespace RPICommander
                                 textBoxAddDeviceName.Text = lines[0];
                                 textBoxdeviceUsername.Text = lines[1];
                                 textBoxdevicePassword.Text = lines[2];
+                                textBoxDevicePort.Text = lines[3];
                             }
                         }
                     }
@@ -93,20 +94,20 @@ namespace RPICommander
         }
         private string getdevice()
         {
-            return deviceName() + "^" + username() + "^" + passWord();
+            return $"{deviceName()}^{username()}^{passWord()}^{Port()}";
         }
 
         private void AddToList()
         {
-            if (!(String.IsNullOrEmpty(deviceName())) && !(String.IsNullOrEmpty(username())) && !(String.IsNullOrEmpty(passWord())))
+            if (!(String.IsNullOrEmpty(deviceName())) && !(String.IsNullOrEmpty(username())) && !(String.IsNullOrEmpty(passWord())) && !(String.IsNullOrEmpty(Port())))
             {
                 listBoxDevices.Items.Add(deviceName()); //add device to listbox - only by name
                 devices.Add(getdevice());//add device to devices list
                 btnSaveDevice.Enabled = true;
-                //reset the rest of the fields
                 textBoxAddDeviceName.Text = "";
                 textBoxdevicePassword.Text = "";
                 textBoxdeviceUsername.Text = "";
+                textBoxDevicePort.Text = "";
             }
             else
             {
@@ -125,6 +126,11 @@ namespace RPICommander
         {
             return textBoxdevicePassword.Text;
         }
+        private string Port()
+        {
+            return textBoxDevicePort.Text;
+        }
+      
         private void showmessage(string msg)//displays message
         {
             MessageBox.Show(msg);

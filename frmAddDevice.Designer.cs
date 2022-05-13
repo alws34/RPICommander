@@ -41,11 +41,13 @@ namespace RPICommander
             this.label3 = new System.Windows.Forms.Label();
             this.textBoxdevicePassword = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.textBoxDevicePort = new System.Windows.Forms.TextBox();
+            this.lblDevicePort = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnSaveDevice
             // 
-            this.btnSaveDevice.Location = new System.Drawing.Point(131, 201);
+            this.btnSaveDevice.Location = new System.Drawing.Point(131, 240);
             this.btnSaveDevice.Name = "btnSaveDevice";
             this.btnSaveDevice.Size = new System.Drawing.Size(93, 23);
             this.btnSaveDevice.TabIndex = 0;
@@ -72,7 +74,7 @@ namespace RPICommander
             // listBoxDevices
             // 
             this.listBoxDevices.FormattingEnabled = true;
-            this.listBoxDevices.Location = new System.Drawing.Point(115, 113);
+            this.listBoxDevices.Location = new System.Drawing.Point(115, 152);
             this.listBoxDevices.Name = "listBoxDevices";
             this.listBoxDevices.Size = new System.Drawing.Size(206, 82);
             this.listBoxDevices.TabIndex = 3;
@@ -80,7 +82,7 @@ namespace RPICommander
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 144);
+            this.label2.Location = new System.Drawing.Point(12, 183);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(80, 13);
             this.label2.TabIndex = 4;
@@ -88,7 +90,7 @@ namespace RPICommander
             // 
             // buttonAddDeviceToList
             // 
-            this.buttonAddDeviceToList.Location = new System.Drawing.Point(115, 84);
+            this.buttonAddDeviceToList.Location = new System.Drawing.Point(115, 123);
             this.buttonAddDeviceToList.Name = "buttonAddDeviceToList";
             this.buttonAddDeviceToList.Size = new System.Drawing.Size(93, 23);
             this.buttonAddDeviceToList.TabIndex = 5;
@@ -98,7 +100,7 @@ namespace RPICommander
             // 
             // btnsaveonedevice
             // 
-            this.btnsaveonedevice.Location = new System.Drawing.Point(228, 84);
+            this.btnsaveonedevice.Location = new System.Drawing.Point(228, 123);
             this.btnsaveonedevice.Name = "btnsaveonedevice";
             this.btnsaveonedevice.Size = new System.Drawing.Size(93, 23);
             this.btnsaveonedevice.TabIndex = 6;
@@ -138,11 +140,29 @@ namespace RPICommander
             this.label4.TabIndex = 9;
             this.label4.Text = "Device Password";
             // 
+            // textBoxDevicePort
+            // 
+            this.textBoxDevicePort.Location = new System.Drawing.Point(115, 84);
+            this.textBoxDevicePort.Name = "textBoxDevicePort";
+            this.textBoxDevicePort.Size = new System.Drawing.Size(206, 20);
+            this.textBoxDevicePort.TabIndex = 12;
+            // 
+            // lblDevicePort
+            // 
+            this.lblDevicePort.AutoSize = true;
+            this.lblDevicePort.Location = new System.Drawing.Point(12, 87);
+            this.lblDevicePort.Name = "lblDevicePort";
+            this.lblDevicePort.Size = new System.Drawing.Size(63, 13);
+            this.lblDevicePort.TabIndex = 11;
+            this.lblDevicePort.Text = "Device Port";
+            // 
             // frmAddDevice
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(335, 232);
+            this.ClientSize = new System.Drawing.Size(335, 276);
+            this.Controls.Add(this.textBoxDevicePort);
+            this.Controls.Add(this.lblDevicePort);
             this.Controls.Add(this.textBoxdevicePassword);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.textBoxdeviceUsername);
@@ -175,5 +195,7 @@ namespace RPICommander
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textBoxdevicePassword;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox textBoxDevicePort;
+        private System.Windows.Forms.Label lblDevicePort;
     }
 }

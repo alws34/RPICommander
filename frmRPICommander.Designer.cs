@@ -150,13 +150,11 @@ namespace RPICommander
             // 
             this.fileSystemWatcherCommandsWatch.EnableRaisingEvents = true;
             this.fileSystemWatcherCommandsWatch.SynchronizingObject = this;
-            this.fileSystemWatcherCommandsWatch.Changed += new System.IO.FileSystemEventHandler(this.FileSystemWatcherCommandsWatch_Changed);
             // 
             // fileSystemWatcherDevicesDB
             // 
             this.fileSystemWatcherDevicesDB.EnableRaisingEvents = true;
             this.fileSystemWatcherDevicesDB.SynchronizingObject = this;
-            this.fileSystemWatcherDevicesDB.Changed += new System.IO.FileSystemEventHandler(this.FileSystemWatcherDevicesDB_Changed);
             // 
             // FrmRPICommander
             // 
@@ -176,7 +174,6 @@ namespace RPICommander
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "FrmRPICommander";
             this.Text = "RPI Commander";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrmRPICommander_FormClosing);
             ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcherCommandsWatch)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcherDevicesDB)).EndInit();
             this.ResumeLayout(false);
