@@ -71,20 +71,27 @@ namespace RPICommander
         {
             if (edit_mode)
             {
-                devices.Add(getdevice());
-                using (StreamWriter sw = new StreamWriter(DevicesDBPath))//rewrite the file
+                devices.Add(getCurrentDevice());
+                using (StreamWriter sw = new StreamWriter(DevicesDBPath))//Rewrite the file
+                {
                     foreach (string device in devices)
+                    {
                         sw.WriteLine(device);
+                    }
+                }
             }
             else
             {
                 if (listBoxDevices.Items.Count == 0)//adding a single device
                 {
                     using (StreamWriter sw = File.AppendText(DevicesDBPath))
-                        sw.WriteLine(getdevice());
+                    {
+                        sw.WriteLine(getCurrentDevice());
+                    }   
                 }
                 else//adding multiple devices
                 {
+
                     using (StreamWriter sw = File.AppendText(DevicesDBPath))
                         foreach (string device in devices)
                             sw.WriteLine(device);
@@ -92,7 +99,7 @@ namespace RPICommander
             }
             Dispose();
         }
-        private string getdevice()
+        private string getCurrentDevice()
         {
             return $"{deviceName()}^{username()}^{passWord()}^{Port()}";
         }
@@ -102,7 +109,7 @@ namespace RPICommander
             if (!(String.IsNullOrEmpty(deviceName())) && !(String.IsNullOrEmpty(username())) && !(String.IsNullOrEmpty(passWord())) && !(String.IsNullOrEmpty(Port())))
             {
                 listBoxDevices.Items.Add(deviceName()); //add device to listbox - only by name
-                devices.Add(getdevice());//add device to devices list
+                devices.Add(getCurrentDevice());//add device to devices list
                 btnSaveDevice.Enabled = true;
                 textBoxAddDeviceName.Text = "";
                 textBoxdevicePassword.Text = "";

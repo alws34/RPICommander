@@ -32,6 +32,8 @@ namespace RPICommander
         {
             InitializeComponent();
             Init();
+            SetCommandsFileSystemWatcher();
+            SetDevicesFileSystemWatcher();
         }
 
         private void Init()
@@ -71,16 +73,17 @@ namespace RPICommander
             //create commands FLP controls
             foreach (Command command in commands)//name, [user,pass]
             {
-                CheckBox chkbox = new CheckBox
+                CheckBox cb = new CheckBox
                 {
                     Name = command.Command_description,
                     Text = command.Command_name,
                     Tag = command
                 };
-                chkbox.CheckedChanged += C_CheckedChanged;
-                chkbox.MouseMove += FlpDevices_MouseMove;
+                cb.CheckedChanged += C_CheckedChanged;
+                cb.MouseMove += FlpDevices_MouseMove;
 
-                flpCommands.Controls.Add(chkbox);
+                if (!flpCommands.Controls.Contains(cb))
+                    flpCommands.Controls.Add(cb);
             }
         }
 
@@ -98,7 +101,11 @@ namespace RPICommander
                 cb.CheckedChanged += Cb_CheckedChanged;
                 cb.MouseMove += FlpDevices_MouseMove;
 
-                flpDevices.Controls.Add(cb);
+                if (!flpDevices.Controls.Contains(cb))
+                    flpDevices.Controls.Add(cb);
+
+
+
             }
         }
 
@@ -109,13 +116,15 @@ namespace RPICommander
                 using (StreamReader sr = new StreamReader(db))
                 {
                     string line;
-                    while ((line = sr.ReadLine()) != null)
+                    while (!String.IsNullOrWhiteSpace(line = sr.ReadLine()))
                     {
                         string[] keyvalue = line.Split('^');
                         if (keyvalue.Length == 2)
                         {
                             Command command = new Command(keyvalue[0], keyvalue[1]);
-                            commands_lst.Add(command);
+
+                            if (!commands_lst.Contains(command))
+                                commands_lst.Add(command);
                         }
                     }
                 }
@@ -137,13 +146,27 @@ namespace RPICommander
                 using (StreamReader sr = new StreamReader(db))
                 {
                     string line;
-                    while ((line = sr.ReadLine()) != null)
+                    while (!String.IsNullOrWhiteSpace(line = sr.ReadLine()))
                     {
                         string[] devic_creds = line.Split('^');
-                        if (devic_creds.Length == 3)
+                        if (devic_creds.Length == 3 || devic_creds.Length == 4)
                         {
-                            Device device = new Device(devic_creds[0], devic_creds[1], devic_creds[2]);
-                            devices_lst.Add(device);
+                            int port = 22;
+                            if (devic_creds.Length == 4)
+                            {
+                                try
+                                {
+                                    port = int.Parse(devic_creds[3]);
+                                }
+                                catch (Exception)
+                                {
+                                    port = 22;
+                                }
+                            }
+                            Device device = new Device(devic_creds[0], devic_creds[1], devic_creds[2], port);
+
+                            if (!devices_lst.Contains(device))
+                                devices_lst.Add(device);
                         }
                     }
                     devices_lst.Sort();
@@ -229,8 +252,11 @@ namespace RPICommander
         private void Cb_CheckedChanged(object sender, EventArgs e)//CheckBox state changed
         {
             CheckBox c = (CheckBox)sender;
-            selected_devices.Add(c);
-            flpCommands.Enabled = true;
+            if (c.Checked)
+                selected_devices.Add(c);
+            else
+                selected_devices.Remove(c);
+
         }
 
         private void BtnStart_Click(object sender, EventArgs e)//start install
@@ -241,15 +267,33 @@ namespace RPICommander
                 using (var client = new SshClient(device.Device_Hostname, device.Port, device.User_name, device.Password))
                 {
                     client.Connect();
+                    string msg = "";
+                    if (client.IsConnected)
+                        msg = $"connected to client {device.Device_Hostname} over port {device.Port}\r\n";
+                    else
+                        msg = $"couldn't connect to client {device.Device_Hostname} over port {device.Port}\r\n";
 
+                    sendMessageToConsole(msg);
                     //foreach (string command in device.Get_Commands())
                     //    client.RunCommand(command);
                     foreach (Command command in selected_commands)
-                        client.RunCommand(command.Command_description);
-                    
-                    client.Disconnect();
+                    {
+                        if (client.IsConnected)
+                        {
+                            client.RunCommand(command.Command_description);
+                            msg = $"\tRan command ''{command.Command_description}'' on {device.Device_Hostname}\r\n";
+                            sendMessageToConsole(msg);
+                        }
+                    }
+                    if (client.IsConnected)
+                        client.Disconnect();
                 }
             }
+        }
+
+        private void sendMessageToConsole(string msg)
+        {
+            textBoxConsole.Text += msg;
         }
 
         protected void BtnAddDevice_Click(object sender, EventArgs e)
@@ -286,5 +330,20 @@ namespace RPICommander
                 lastY = e.Y;
             }
         }
+
+        private void SetCommandsFileSystemWatcher()
+        {
+            fileSystemWatcherCommandsWatch.Path = Directory.GetParent(commandsDBPath).ToString();//set file system watcher only for changes in the commandsDB file
+            fileSystemWatcherDevicesDB.Filter = Path.GetFileName(commandsDBPath);
+            CommandsControls(commands_lst);
+        }
+
+        private void SetDevicesFileSystemWatcher()
+        {
+            fileSystemWatcherDevicesDB.Path = Directory.GetParent(devicesDBPath).ToString();//set file system watcher only for changes in the devicesDB file
+            fileSystemWatcherDevicesDB.Filter = Path.GetFileName(devicesDBPath);
+            DevicesControls(devices_lst);
+        }
+
     }
 }
