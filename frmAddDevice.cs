@@ -8,15 +8,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using RPICommander;
 
 namespace RPICommander
 {
     public partial class frmAddDevice : Form
     {
-        string devicesDB;
-        public string DevicesDBPath { get => devicesDB; set => devicesDB = value; }
-        List<string> devices = new List<string>();
+        private string DEFAULT_SSH_PORT = "22";
+        string devicesDBpath;
         bool edit_mode = false;
+
+        public string DevicesDBPath { get => devicesDBpath; set => devicesDBpath = value; }
+        List<string> devices = new List<string>();
+
+        public delegate void EventHandler_sendMessageToConsole(string msg);
+        public event EventHandler_sendMessageToConsole sendMessageToConsole = delegate { };
+
 
         public frmAddDevice(string devicesDBpath)
         {
@@ -28,7 +35,6 @@ namespace RPICommander
         public frmAddDevice(string devicesDBpath, string device_name)//edit mode
         {
             InitializeComponent();
-
             DevicesDBPath = devicesDBpath;
 
             edit_mode = true;
@@ -36,26 +42,32 @@ namespace RPICommander
             buttonAddDeviceToList.Enabled = false;
             btnSaveDevice.Enabled = false;
             listBoxDevices.Enabled = false;
+            textBoxDevicePort.Text = DEFAULT_SSH_PORT;
+            ReadDB(device_name);
+        }
 
+        private void ReadDB(string device_name)
+        {
             try
             {
-                using (StreamReader sr = new StreamReader(DevicesDBPath))//read existing db without the edit designated device
+                using (StreamReader sr = new StreamReader(DevicesDBPath))
                 {
-                    string[] lines;
                     string line;
                     while ((line = sr.ReadLine()) != null)
                     {
-                        lines = line.Split('^');
-                        if (lines.Length == 4)
+                        string[] device_str = line.Split('^');
+                        if (device_str.Length == 4)
                         {
-                            if (lines[0] != device_name)//add to list all devices from existing db except editable device
-                                devices.Add(line);
+                            if (device_str[0] != device_name)//add to list all devices from existing db except editable device
+                            {
+                                devices.Add(GetCurrentDevice());
+                            }
                             else
                             {
-                                textBoxAddDeviceName.Text = lines[0];
-                                textBoxdeviceUsername.Text = lines[1];
-                                textBoxdevicePassword.Text = lines[2];
-                                textBoxDevicePort.Text = lines[3];
+                                textBoxAddDeviceName.Text = device_str[0];
+                                textBoxdeviceUsername.Text = device_str[1];
+                                textBoxdevicePassword.Text = device_str[2];
+                                textBoxDevicePort.Text = device_str[3];
                             }
                         }
                     }
@@ -63,92 +75,98 @@ namespace RPICommander
             }
             catch (Exception e)
             {
-                showmessage(e.ToString());
+                sendMessageToConsole($"{e}");
             }
         }
+        private void RewriteDB()
+        {
+            using (StreamWriter sw = new StreamWriter(DevicesDBPath))//Rewrite the file
+                foreach (string device in devices)
+                    sw.WriteLine(device);
+        }
 
-        private void addDevice()//save devices
+        private void AppendToDeviceDB(string device)
+        {
+            using (StreamWriter sw = File.AppendText(DevicesDBPath))
+                sw.WriteLine(device);
+            sendMessageToConsole($"Added device ''{device}'' to deviced DB");
+        }
+
+
+        private void AddDeviceToDB()
         {
             if (edit_mode)
-            {
-                devices.Add(getCurrentDevice());
-                using (StreamWriter sw = new StreamWriter(DevicesDBPath))//Rewrite the file
-                {
-                    foreach (string device in devices)
-                    {
-                        sw.WriteLine(device);
-                    }
-                }
-            }
+                AppendToDeviceDB(GetCurrentDevice());
             else
             {
-                if (listBoxDevices.Items.Count == 0)//adding a single device
-                {
-                    using (StreamWriter sw = File.AppendText(DevicesDBPath))
-                    {
-                        sw.WriteLine(getCurrentDevice());
-                    }   
-                }
-                else//adding multiple devices
-                {
-
-                    using (StreamWriter sw = File.AppendText(DevicesDBPath))
-                        foreach (string device in devices)
-                            sw.WriteLine(device);
-                }
+                if (listBoxDevices.Items.Count == 0)
+                    AppendToDeviceDB(GetCurrentDevice());
+                else
+                    foreach (string device in devices)
+                        AppendToDeviceDB(device);
             }
             Dispose();
         }
-        private string getCurrentDevice()
+
+        private string GetCurrentDevice()
         {
-            return $"{deviceName()}^{username()}^{passWord()}^{Port()}";
+            return $"{GetDeviceName()}^{GetUserName()}^{GetPassword()}^{GetPort()}";
         }
 
+        private bool CheckIfEmptyString(string arg)
+        {
+            return string.IsNullOrWhiteSpace(arg);
+        }
         private void AddToList()
         {
-            if (!(String.IsNullOrEmpty(deviceName())) && !(String.IsNullOrEmpty(username())) && !(String.IsNullOrEmpty(passWord())) && !(String.IsNullOrEmpty(Port())))
+            if (!CheckIfEmptyString(GetDeviceName()) && !CheckIfEmptyString(GetUserName()) && !CheckIfEmptyString(GetPassword()))
             {
-                listBoxDevices.Items.Add(deviceName()); //add device to listbox - only by name
-                devices.Add(getCurrentDevice());//add device to devices list
+                listBoxDevices.Items.Add(GetDeviceName());
+                devices.Add(GetCurrentDevice());
                 btnSaveDevice.Enabled = true;
-                textBoxAddDeviceName.Text = "";
-                textBoxdevicePassword.Text = "";
-                textBoxdeviceUsername.Text = "";
-                textBoxDevicePort.Text = "";
+                ResetFormFields();
             }
             else
             {
-                showmessage("Please fill all fields");
+                ShowMessageBox("Please fill all fields");
+                sendMessageToConsole($"Not all field were filled");
             }
         }
-        private string deviceName()//return device name
+        private string GetDeviceName()
         {
             return textBoxAddDeviceName.Text;
         }
-        private string username()//return username
+        private string GetUserName()
         {
             return textBoxdeviceUsername.Text;
         }
-        private string passWord()//return password
+        private string GetPassword()
         {
             return textBoxdevicePassword.Text;
         }
-        private string Port()
+        private string GetPort()
         {
+            if (String.IsNullOrWhiteSpace(textBoxDevicePort.Text))
+                return DEFAULT_SSH_PORT;
             return textBoxDevicePort.Text;
         }
-      
-        private void showmessage(string msg)//displays message
+
+        private void ShowMessageBox(string msg, string caption = "Error", MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.Error)
         {
-            MessageBox.Show(msg);
+            MessageBox.Show(msg, caption, buttons, icon);
+        }
+        private void ResetFormFields()
+        {
+            textBoxAddDeviceName.Text = "";
+            textBoxdevicePassword.Text = "";
+            textBoxdeviceUsername.Text = "";
+            textBoxDevicePort.Text = "";
         }
 
-        /*
-         * Events
-         */
+
         private void buttonSaveDevices_Click(object sender, EventArgs e)
         {
-            addDevice();
+            AddDeviceToDB();
             Dispose();
         }
         private void buttonAddDeviceToList_Click(object sender, EventArgs e)
@@ -157,7 +175,7 @@ namespace RPICommander
         }
         private void btnsaveonedevice_Click(object sender, EventArgs e)
         {
-            addDevice();
+            AddDeviceToDB();
         }
     }
 }

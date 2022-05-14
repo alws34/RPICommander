@@ -1,23 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RPICommander
 {
     public partial class frmAddCommand : Form
     {
-
         string commandsDBpath;
         public string CommandsDBpath { get => commandsDBpath; set => commandsDBpath = value; }
         List<string> commandslst = new List<string>();
         bool edit_mode = false;
+
+        public delegate void EventHandler_sendMessageToConsole(string msg);
+        public event EventHandler_sendMessageToConsole sendMessageToConsole = delegate { };
+
         public frmAddCommand(string commandsDBpath)
         {
             InitializeComponent();
@@ -28,38 +25,46 @@ namespace RPICommander
             InitializeComponent();
             commandsDBpath = path;
             edit_mode = true;
+
+            ReadCommands(command);
+            sendMessageToConsole($"Read {commandslst.Count} commands");
+        }
+        private void ReadCommands(string command)
+        {
             try
             {
-                using (StreamReader sr = new StreamReader(commandsDBpath))//read relevant command from db
+                using (StreamReader sr = new StreamReader(commandsDBpath))
                 {
                     string[] lines;
                     string line;
                     while ((line = sr.ReadLine()) != null)
                     {
                         lines = line.Split('^');
-                        if (lines[0] != command)//add to list all non relevant commands
+                        if (lines[0] != command)
                         {
                             commandslst.Add(line);
                         }
-                        else//fill out the form with the relevant command and dont add it to the list(to enable changes with ease)
+                        else
                         {
                             textBoxCommandName.Text = lines[0];
                             textBoxCommand.Text = lines[1];
+                            sendMessageToConsole($"Editing command {lines[0]}");
                         }
                     }
                 }
             }
             catch (IOException)
             {
-                showmessage("error reading from db @ frmaddcommand constructor");
+                string msg = "error reading from db @ frmaddcommand constructor";
+                ShowMessageBox(msg);
+                sendMessageToConsole(msg);
             }
-
         }
-
-        private void showmessage(string msg)
+        private void ShowMessageBox(string msg, string caption = "Error", MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.Error)
         {
-            MessageBox.Show(msg);
+            MessageBox.Show(msg, caption, buttons, icon);
         }
+
 
         private void btnSaveCommand_Click(object sender, EventArgs e) //add command to db
         {

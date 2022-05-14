@@ -12,28 +12,25 @@ namespace RPICommander
         string user_name;
         string password;
         int port;
-        List<Command> commands;
-        public Device(string device_HostName, string user_name, string password,int port = 22)
+
+        public Device(string device_HostName, string user_name, string password, int port = 22)
         {
-            this.Device_Hostname = device_HostName;
-            this.User_name = user_name;
-            this.Password = password;
-            this.Port = port;
+            Device_Hostname = device_HostName;
+            User_name = user_name;
+            Password = password;
+            Port = port;
         }
 
         public string Device_Hostname { get => Hostname; set => Hostname = value; }
         public string User_name { get => user_name; set => user_name = value; }
         public string Password { get => password; set => password = value; }
         public int Port { get => port; set => port = value; }
-        public List<Command> Commands { get => commands; set => commands = value; }
 
-        public List<Command> Get_Commands()
+        public override string ToString()
         {
-            return Commands;
-        }
-        public void AddCommand(Command command_name)
-        {
-            Commands.Add(command_name);
+            return $"{this.Hostname}^{this.User_name}^{this.Password}^{this.Port}";
         }
     }
+
+
 }

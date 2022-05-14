@@ -153,11 +153,13 @@ namespace RPICommander
             // 
             this.fileSystemWatcherCommandsWatch.EnableRaisingEvents = true;
             this.fileSystemWatcherCommandsWatch.SynchronizingObject = this;
+            this.fileSystemWatcherCommandsWatch.Changed += new System.IO.FileSystemEventHandler(this.fileSystemWatcherWatch_Changed);
             // 
             // fileSystemWatcherDevicesDB
             // 
             this.fileSystemWatcherDevicesDB.EnableRaisingEvents = true;
             this.fileSystemWatcherDevicesDB.SynchronizingObject = this;
+            this.fileSystemWatcherDevicesDB.Changed += new System.IO.FileSystemEventHandler(this.fileSystemWatcherWatch_Changed);
             // 
             // lblDevices
             // 

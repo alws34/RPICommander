@@ -28,12 +28,19 @@ namespace RPICommander
         private int lastX;
         private int lastY;
 
+        int DEFAULT_SSH_PORT = 22;
+
+
+        public delegate void sendMessageToConsoleDelegate(string value);
+        public sendMessageToConsoleDelegate sendMessageToConsoleCallback;
+
+
         public FrmRPICommander()
         {
             InitializeComponent();
-            Init();
             SetCommandsFileSystemWatcher();
             SetDevicesFileSystemWatcher();
+            Init();
         }
 
         private void Init()
@@ -44,34 +51,31 @@ namespace RPICommander
             flpCommands.AutoScroll = true;
             CreateDir(dirpath);
 
-            // read commands from DB
             if (File.Exists(commandsDBPath))
             {
                 ReadCommands(commandsDBPath);
             }
-            else//create commandsDB file if not exists;
+            else
             {
                 CreateFile(commandsDBPath);
                 AddNewCommand(commandsDBPath);
             }
 
-            //read device list from DB
             if (File.Exists(devicesDBPath))
                 ReadDevices(devicesDBPath);
             else
             {
-                CreateFile(devicesDBPath);//create devicesDB file if not exists;
-                AddNewDevice(devicesDBPath); //add first device to db
+                CreateFile(devicesDBPath);
+                AddNewDevice(devicesDBPath);
             }
 
             CommandsControls(commands_lst);
             DevicesControls(devices_lst);
         }
 
-        private void CommandsControls(List<Command> commands)//creates the commands controls
+        private void CommandsControls(List<Command> commands)
         {
-            //create commands FLP controls
-            foreach (Command command in commands)//name, [user,pass]
+            foreach (Command command in commands)
             {
                 CheckBox cb = new CheckBox
                 {
@@ -87,9 +91,8 @@ namespace RPICommander
             }
         }
 
-        private void DevicesControls(List<Device> devices)//creates the devices controls
+        private void DevicesControls(List<Device> devices)
         {
-            //create devices FLP controls
             foreach (Device device in devices)
             {
                 CheckBox cb = new CheckBox
@@ -103,13 +106,10 @@ namespace RPICommander
 
                 if (!flpDevices.Controls.Contains(cb))
                     flpDevices.Controls.Add(cb);
-
-
-
             }
         }
 
-        private void ReadCommands(string db) //read commands from DB
+        private void ReadCommands(string db)
         {
             try
             {
@@ -122,20 +122,18 @@ namespace RPICommander
                         if (keyvalue.Length == 2)
                         {
                             Command command = new Command(keyvalue[0], keyvalue[1]);
-
-                            if (!commands_lst.Contains(command))
-                                commands_lst.Add(command);
+                            commands_lst.Add(command);
                         }
                     }
                 }
             }
             catch (IOException)
             {
-                Reset();
+                ResetForm();
             }
-            catch (ArgumentException)
+            catch (ArgumentException e)
             {
-                //Showmessage(e.ToString());
+                sendMessageToConsole($"{e}");
                 return;
             }
         }
@@ -151,7 +149,7 @@ namespace RPICommander
                         string[] devic_creds = line.Split('^');
                         if (devic_creds.Length == 3 || devic_creds.Length == 4)
                         {
-                            int port = 22;
+                            int port = DEFAULT_SSH_PORT;
                             if (devic_creds.Length == 4)
                             {
                                 try
@@ -160,7 +158,7 @@ namespace RPICommander
                                 }
                                 catch (Exception)
                                 {
-                                    port = 22;
+                                    port = DEFAULT_SSH_PORT;
                                 }
                             }
                             Device device = new Device(devic_creds[0], devic_creds[1], devic_creds[2], port);
@@ -169,22 +167,21 @@ namespace RPICommander
                                 devices_lst.Add(device);
                         }
                     }
-                    devices_lst.Sort();
                 }
             }
             catch (IOException)
             {
-                Reset();
+                ResetForm();
             }
-            catch (ArgumentException)
+            catch (ArgumentException e)
             {
-                //Showmessage(e.ToString());
+                sendMessageToConsole($"{e}");
                 return;
             }
         }
 
 
-        private void CreateDir(string path) //create directories
+        private void CreateDir(string path)
         {
             try
             {
@@ -193,10 +190,11 @@ namespace RPICommander
             }
             catch (Exception e)
             {
-                Showmessage(e.ToString());
+                ShowMessageBox($"{e}");
+                sendMessageToConsole($"{e}");
             }
         }
-        private void CreateFile(string path)//create files
+        private void CreateFile(string path)
         {
             try
             {
@@ -208,28 +206,42 @@ namespace RPICommander
             }
             catch (Exception e)
             {
-                Showmessage(e.ToString());
+                ShowMessageBox($"{e}");
+                sendMessageToConsole($"{e}");
             }
         }
 
-
-        private void AddNewDevice(string devicesDB)//add device to db (frmAddDevice)
+        private void AddNewDevice(string devicesDB)
         {
-            frmAddDevice add_device = new frmAddDevice(devicesDB);
+            frmAddDevice add_device = new frmAddDevice(devicesDBPath);
+            add_device.sendMessageToConsole += sendMessageToConsole;
             add_device.Show();
         }
-        private void AddNewCommand(string commandsDB)//add commands to DB (frmAddCommand)
+        private void AddNewCommand(string commandsDB)
         {
             frmAddCommand addcommand = new frmAddCommand(commandsDB);
+            addcommand.sendMessageToConsole += sendMessageToConsole;
             addcommand.Show();
         }
 
-
-        private void Showmessage(string msg)
+        private void ShowMessageBox(string msg, string caption = "Error", MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.Error)
         {
-            MessageBox.Show(msg);
+            MessageBox.Show(msg, caption, buttons, icon);
         }
-        private void Reset()
+        private void sendMessageToConsole(string msg)
+        {
+            if (textBoxConsole.InvokeRequired)
+            {
+                sendMessageToConsoleDelegate call = new sendMessageToConsoleDelegate(sendMessageToConsole);
+                textBoxConsole.BeginInvoke(call, msg);
+            }
+            else
+            {
+                textBoxConsole.Text += msg;
+            }
+        }
+       
+        private void ResetForm()
         {
             flpDevices.Enabled = true;
             flpCommands.Controls.Clear();
@@ -239,17 +251,15 @@ namespace RPICommander
             Init();
         }
 
-
-        private void C_CheckedChanged(object sender, EventArgs e)//checkbox state change
+        private void C_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox c = (CheckBox)sender;
             if (c.Checked)
-                selected_commands.Add((Command)c.Tag);//add command to selected commands
+                selected_commands.Add((Command)c.Tag);
             else
-                selected_commands.Remove((Command)c.Tag);//remove command from selected command
+                selected_commands.Remove((Command)c.Tag);
         }
-
-        private void Cb_CheckedChanged(object sender, EventArgs e)//CheckBox state changed
+        private void Cb_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox c = (CheckBox)sender;
             if (c.Checked)
@@ -259,7 +269,7 @@ namespace RPICommander
 
         }
 
-        private void BtnStart_Click(object sender, EventArgs e)//start install
+        private void BtnStart_Click(object sender, EventArgs e)
         {
             foreach (CheckBox c in selected_devices)
             {
@@ -290,60 +300,59 @@ namespace RPICommander
                 }
             }
         }
-
-        private void sendMessageToConsole(string msg)
-        {
-            textBoxConsole.Text += msg;
-        }
-
         protected void BtnAddDevice_Click(object sender, EventArgs e)
         {
             AddNewDevice(devicesDBPath);
         }
-
         protected void BtnAddCommand_Click(object sender, EventArgs e)
         {
             AddNewCommand(commandsDBPath);
         }
-
         protected void BtnEditDB_Click(object sender, EventArgs e)
         {
             frmEditDBs editdb = new frmEditDBs(devicesDBPath, commandsDBPath);
             editdb.Show();
         }
-
         private void BtnReset_Click(object sender, EventArgs e)
         {
-            Reset();
+            ResetForm();
         }
-
         private void FlpDevices_MouseMove(object sender, MouseEventArgs e)
         {
-            if (e.X != lastX || e.Y != lastY)// fixes the tooltip flickering - remember the last mouse position and will not change the tooltip position (re-render it) unless the mouse moves again (changes position)
+            if (e.X != lastX || e.Y != lastY)
             {
                 CheckBox c = (CheckBox)sender;
                 toolTip1.IsBalloon = true;
                 toolTip1.SetToolTip(c, c.Text + "\n" + c.Name);
 
-                //update mouse position to new parameters
                 lastX = e.X;
                 lastY = e.Y;
             }
         }
 
+        private void ChangesDetected()
+        {
+            devices_lst.Clear();
+            flpDevices.Controls.Clear();
+            commands_lst.Clear();
+            flpCommands.Controls.Clear();
+            Init();
+        }
         private void SetCommandsFileSystemWatcher()
         {
             fileSystemWatcherCommandsWatch.Path = Directory.GetParent(commandsDBPath).ToString();//set file system watcher only for changes in the commandsDB file
             fileSystemWatcherDevicesDB.Filter = Path.GetFileName(commandsDBPath);
             CommandsControls(commands_lst);
         }
-
         private void SetDevicesFileSystemWatcher()
         {
             fileSystemWatcherDevicesDB.Path = Directory.GetParent(devicesDBPath).ToString();//set file system watcher only for changes in the devicesDB file
             fileSystemWatcherDevicesDB.Filter = Path.GetFileName(devicesDBPath);
             DevicesControls(devices_lst);
         }
-
+        private void fileSystemWatcherWatch_Changed(object sender, FileSystemEventArgs e)
+        {
+            ChangesDetected();
+        }
     }
 }
