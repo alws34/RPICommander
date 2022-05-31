@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RPICommander
 {
-    internal class Device
+    public class Device
     {
         string Hostname;
         string user_name;
@@ -21,6 +21,11 @@ namespace RPICommander
             Port = port;
         }
 
+        public Device()
+        {
+
+        }
+
         public string Device_Hostname { get => Hostname; set => Hostname = value; }
         public string User_name { get => user_name; set => user_name = value; }
         public string Password { get => password; set => password = value; }
@@ -28,7 +33,7 @@ namespace RPICommander
 
         public override string ToString()
         {
-            return $"{this.Hostname}^{this.User_name}^{this.Password}^{this.Port}";
+            return $"{Hostname}^{User_name}^{Password}^{Port}";
         }
     }
 

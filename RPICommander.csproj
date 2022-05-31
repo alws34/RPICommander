@@ -91,46 +91,54 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Command.cs" />
-    <Compile Include="Device.cs" />
-    <Compile Include="frmRPICommander.cs">
+    <Compile Include="Classes\Command.cs" />
+    <Compile Include="Classes\Device.cs" />
+    <Compile Include="Forms\frmRPICommander.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmRPICommander.Designer.cs">
+    <Compile Include="Forms\frmRPICommander.Designer.cs">
       <DependentUpon>frmRPICommander.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmAddCommand.cs">
+    <Compile Include="Forms\frmAddCommand.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmAddCommand.Designer.cs">
+    <Compile Include="Forms\frmAddCommand.Designer.cs">
       <DependentUpon>frmAddCommand.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmAddDevice.cs">
+    <Compile Include="Forms\frmAddDevice.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmAddDevice.Designer.cs">
+    <Compile Include="Forms\frmAddDevice.Designer.cs">
       <DependentUpon>frmAddDevice.cs</DependentUpon>
     </Compile>
-    <Compile Include="frmEditDBs.cs">
+    <Compile Include="Forms\frmEditDBs.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmEditDBs.Designer.cs">
+    <Compile Include="Forms\frmEditDBs.Designer.cs">
       <DependentUpon>frmEditDBs.cs</DependentUpon>
     </Compile>
-    <Compile Include="Global.cs" />
+    <Compile Include="Forms\frmAbout.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\frmAbout.Designer.cs">
+      <DependentUpon>frmAbout.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="frmEditDBs.resx">
+    <EmbeddedResource Include="Forms\frmEditDBs.resx">
       <DependentUpon>frmEditDBs.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmRPICommander.resx">
+    <EmbeddedResource Include="Forms\frmRPICommander.resx">
       <DependentUpon>frmRPICommander.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmAddCommand.resx">
+    <EmbeddedResource Include="Forms\frmAddCommand.resx">
       <DependentUpon>frmAddCommand.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="frmAddDevice.resx">
+    <EmbeddedResource Include="Forms\frmAddDevice.resx">
       <DependentUpon>frmAddDevice.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\frmAbout.resx">
+      <DependentUpon>frmAbout.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -152,7 +160,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="RPICommander_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

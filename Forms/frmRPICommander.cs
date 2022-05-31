@@ -1,4 +1,5 @@
 ﻿using Renci.SshNet;
+using RPICommander.Forms;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -15,32 +16,29 @@ namespace RPICommander
 {
     public partial class FrmRPICommander : Form
     {
-        private List<Device> devices_lst = new List<Device>() { }; // list of all available devices
-        private List<Command> commands_lst = new List<Command>() { };//dictionary of all available commands
-        private List<Command> selected_commands = new List<Command>(); //list of selected commands to assign for the selected device
-
-        private List<CheckBox> selected_devices = new List<CheckBox>(); //current device
-
-
-        string commandsDBPath; //commandsDB .dat path
-        string devicesDBPath; //devicesDB .dat path
-
+        private const string APP_VERSION = "2.0.3";
+        private const int DEFAULT_SSH_PORT = 22;
+        string commandsDBPath;
+        private string devicesDBPath;
         private int lastX;
         private int lastY;
-
-        int DEFAULT_SSH_PORT = 22;
-
+        private List<Device> devices_lst = new List<Device>() { };
+        private List<Command> commands_lst = new List<Command>() { };
+        private List<Command> selected_commands = new List<Command>();
+        private List<CheckBox> selected_devices = new List<CheckBox>();
 
         public delegate void sendMessageToConsoleDelegate(string value);
         public sendMessageToConsoleDelegate sendMessageToConsoleCallback;
 
+        
 
         public FrmRPICommander()
         {
             InitializeComponent();
+            Init();
             SetCommandsFileSystemWatcher();
             SetDevicesFileSystemWatcher();
-            Init();
+            CenterToScreen();
         }
 
         private void Init()
@@ -52,13 +50,11 @@ namespace RPICommander
             CreateDir(dirpath);
 
             if (File.Exists(commandsDBPath))
-            {
                 ReadCommands(commandsDBPath);
-            }
             else
             {
                 CreateFile(commandsDBPath);
-                AddNewCommand(commandsDBPath);
+                AddNewCommandForm(commandsDBPath);
             }
 
             if (File.Exists(devicesDBPath))
@@ -66,14 +62,14 @@ namespace RPICommander
             else
             {
                 CreateFile(devicesDBPath);
-                AddNewDevice(devicesDBPath);
+                AddNewDeviceForm(devicesDBPath);
             }
 
-            CommandsControls(commands_lst);
-            DevicesControls(devices_lst);
+            CreateCommandsControls(commands_lst);
+            CreateDevicesControls(devices_lst);
         }
 
-        private void CommandsControls(List<Command> commands)
+        private void CreateCommandsControls(List<Command> commands)
         {
             foreach (Command command in commands)
             {
@@ -83,15 +79,14 @@ namespace RPICommander
                     Text = command.Command_name,
                     Tag = command
                 };
-                cb.CheckedChanged += C_CheckedChanged;
+                cb.CheckedChanged += CheckBox_CheckedChanged;
                 cb.MouseMove += FlpDevices_MouseMove;
 
-                if (!flpCommands.Controls.Contains(cb))
-                    flpCommands.Controls.Add(cb);
+                flpCommands.Controls.Add(cb);
             }
         }
 
-        private void DevicesControls(List<Device> devices)
+        private void CreateDevicesControls(List<Device> devices)
         {
             foreach (Device device in devices)
             {
@@ -104,8 +99,7 @@ namespace RPICommander
                 cb.CheckedChanged += Cb_CheckedChanged;
                 cb.MouseMove += FlpDevices_MouseMove;
 
-                if (!flpDevices.Controls.Contains(cb))
-                    flpDevices.Controls.Add(cb);
+                flpDevices.Controls.Add(cb);
             }
         }
 
@@ -116,19 +110,21 @@ namespace RPICommander
                 using (StreamReader sr = new StreamReader(db))
                 {
                     string line;
-                    while (!String.IsNullOrWhiteSpace(line = sr.ReadLine()))
+                    while ((line = sr.ReadLine()) != null)
                     {
                         string[] keyvalue = line.Split('^');
-                        if (keyvalue.Length == 2)
-                        {
-                            Command command = new Command(keyvalue[0], keyvalue[1]);
-                            commands_lst.Add(command);
-                        }
+
+                        if (keyvalue.Length != 2)
+                            return;
+
+                        Command command = new Command(keyvalue[0], keyvalue[1]);
+                        commands_lst.Add(command);
                     }
                 }
             }
-            catch (IOException)
+            catch (IOException ioe)
             {
+                sendMessageToConsole($"{ioe}\nResetting Form");
                 ResetForm();
             }
             catch (ArgumentException e)
@@ -137,7 +133,8 @@ namespace RPICommander
                 return;
             }
         }
-        private void ReadDevices(string db)//read devices from DB
+
+        private void ReadDevices(string db)
         {
             try
             {
@@ -163,8 +160,8 @@ namespace RPICommander
                             }
                             Device device = new Device(devic_creds[0], devic_creds[1], devic_creds[2], port);
 
-                            if (!devices_lst.Contains(device))
-                                devices_lst.Add(device);
+                            //if (!devices_lst.Contains(device))
+                            devices_lst.Add(device);
                         }
                     }
                 }
@@ -180,12 +177,11 @@ namespace RPICommander
             }
         }
 
-
         private void CreateDir(string path)
         {
             try
             {
-                if (!(Directory.Exists(path)))//create directory if not exist
+                if (!(Directory.Exists(path)))
                     Directory.CreateDirectory(path);
             }
             catch (Exception e)
@@ -194,11 +190,12 @@ namespace RPICommander
                 sendMessageToConsole($"{e}");
             }
         }
+
         private void CreateFile(string path)
         {
             try
             {
-                if (!(File.Exists(path))) //create file if not exist
+                if (!(File.Exists(path)))
                 {
                     var f = File.Create(path);
                     f.Close();
@@ -211,13 +208,14 @@ namespace RPICommander
             }
         }
 
-        private void AddNewDevice(string devicesDB)
+        private void AddNewDeviceForm(string devicesDB)
         {
             frmAddDevice add_device = new frmAddDevice(devicesDBPath);
             add_device.sendMessageToConsole += sendMessageToConsole;
             add_device.Show();
         }
-        private void AddNewCommand(string commandsDB)
+
+        private void AddNewCommandForm(string commandsDB)
         {
             frmAddCommand addcommand = new frmAddCommand(commandsDB);
             addcommand.sendMessageToConsole += sendMessageToConsole;
@@ -228,19 +226,18 @@ namespace RPICommander
         {
             MessageBox.Show(msg, caption, buttons, icon);
         }
+
         private void sendMessageToConsole(string msg)
         {
-            if (textBoxConsole.InvokeRequired)
+            if (!textBoxConsole.InvokeRequired)
             {
-                sendMessageToConsoleDelegate call = new sendMessageToConsoleDelegate(sendMessageToConsole);
-                textBoxConsole.BeginInvoke(call, msg);
+                textBoxConsole.AppendText(msg);
+                return;
             }
-            else
-            {
-                textBoxConsole.Text += msg;
-            }
+            sendMessageToConsoleDelegate call = new sendMessageToConsoleDelegate(sendMessageToConsole);
+            textBoxConsole.BeginInvoke(call, msg);
         }
-       
+
         private void ResetForm()
         {
             flpDevices.Enabled = true;
@@ -248,17 +245,27 @@ namespace RPICommander
             flpDevices.Controls.Clear();
             devices_lst.Clear();
             commands_lst.Clear();
+            textBoxConsole.Clear();
             Init();
         }
 
-        private void C_CheckedChanged(object sender, EventArgs e)
+        private void CheckBox_CheckedChanged(object sender, EventArgs e)
         {
-            CheckBox c = (CheckBox)sender;
-            if (c.Checked)
-                selected_commands.Add((Command)c.Tag);
+            CheckBox c = sender as CheckBox;
+            if (c != null)
+            {
+                if (c.Checked)
+                    selected_commands.Add((Command)c.Tag);
+                else
+                    selected_commands.Remove((Command)c.Tag);
+            }
             else
-                selected_commands.Remove((Command)c.Tag);
+            {
+                sendMessageToConsole($"Sender was not a CheckBox! @CheckBox_CheckedChanged");
+            }
+
         }
+
         private void Cb_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox c = (CheckBox)sender;
@@ -269,54 +276,82 @@ namespace RPICommander
 
         }
 
-        private void BtnStart_Click(object sender, EventArgs e)
+        private void Start(object sender, EventArgs e)
         {
+            if (!(selected_commands.Count > 0))
+            {
+                sendMessageToConsole($"\r\nNo Commands Selected\r\n");
+                return;
+            }
+
             foreach (CheckBox c in selected_devices)
             {
                 Device device = c.Tag as Device;
+                if (device == null)
+                {
+                    sendMessageToConsole($"Error Casting Device! @BtnStart_Click");
+                    continue;
+                }
                 using (var client = new SshClient(device.Device_Hostname, device.Port, device.User_name, device.Password))
                 {
-                    client.Connect();
-                    string msg = "";
-                    if (client.IsConnected)
-                        msg = $"connected to client {device.Device_Hostname} over port {device.Port}\r\n";
-                    else
-                        msg = $"couldn't connect to client {device.Device_Hostname} over port {device.Port}\r\n";
-
-                    sendMessageToConsole(msg);
-                    //foreach (string command in device.Get_Commands())
-                    //    client.RunCommand(command);
-                    foreach (Command command in selected_commands)
+                    try
                     {
-                        if (client.IsConnected)
+                        client.Connect();
+
+                        if (!client.IsConnected)
                         {
-                            client.RunCommand(command.Command_description);
-                            msg = $"\tRan command ''{command.Command_description}'' on {device.Device_Hostname}\r\n";
-                            sendMessageToConsole(msg);
+                            sendMessageToConsole($"couldn't connect to client {device.Device_Hostname} over port {device.Port}\n");
+                            continue;
+                        }
+                        sendMessageToConsole($"\r\nconnected to client {device.Device_Hostname} over port {device.Port}\n");
+
+                        foreach (Command command in selected_commands)
+                        {
+                            SshCommand cmd = client.CreateCommand(command.Command_description);
+                            string result = cmd.Execute();
+                            StreamReader reader = new StreamReader(cmd.ExtendedOutputStream);
+                            string stderr = reader.ReadToEnd();
+
+                            sendMessageToConsole($"\r\n\tExecuted command ''{command.Command_description}'' on {device.Device_Hostname}\r\n");
+
+                            if (!string.IsNullOrWhiteSpace(result))
+                                sendMessageToConsole($"\tCommand output: {result}\n");
+                            if (!string.IsNullOrWhiteSpace(stderr))
+                                sendMessageToConsole($"\t{stderr}\n");
                         }
                     }
-                    if (client.IsConnected)
-                        client.Disconnect();
+                    catch (Exception ex)
+                    {
+                        sendMessageToConsole($"\r{ex.ToString()}");
+                        return;
+                    }
+                    client.Disconnect();
                 }
             }
         }
+
         protected void BtnAddDevice_Click(object sender, EventArgs e)
         {
-            AddNewDevice(devicesDBPath);
+            AddNewDeviceForm(devicesDBPath);
         }
+
         protected void BtnAddCommand_Click(object sender, EventArgs e)
         {
-            AddNewCommand(commandsDBPath);
+            AddNewCommandForm(commandsDBPath);
         }
+
         protected void BtnEditDB_Click(object sender, EventArgs e)
         {
             frmEditDBs editdb = new frmEditDBs(devicesDBPath, commandsDBPath);
+            editdb.sendMessageToConsole += sendMessageToConsole;
             editdb.Show();
         }
+
         private void BtnReset_Click(object sender, EventArgs e)
         {
             ResetForm();
         }
+
         private void FlpDevices_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.X != lastX || e.Y != lastY)
@@ -332,27 +367,39 @@ namespace RPICommander
 
         private void ChangesDetected()
         {
-            devices_lst.Clear();
             flpDevices.Controls.Clear();
-            commands_lst.Clear();
             flpCommands.Controls.Clear();
+            devices_lst.Clear();
+            commands_lst.Clear();
+            selected_commands.Clear();
+            selected_devices.Clear();
             Init();
         }
+
         private void SetCommandsFileSystemWatcher()
         {
-            fileSystemWatcherCommandsWatch.Path = Directory.GetParent(commandsDBPath).ToString();//set file system watcher only for changes in the commandsDB file
+            fileSystemWatcherCommandsWatch.Path = Directory.GetParent(commandsDBPath).ToString();
             fileSystemWatcherDevicesDB.Filter = Path.GetFileName(commandsDBPath);
-            CommandsControls(commands_lst);
+            ResetForm();
         }
+
         private void SetDevicesFileSystemWatcher()
         {
-            fileSystemWatcherDevicesDB.Path = Directory.GetParent(devicesDBPath).ToString();//set file system watcher only for changes in the devicesDB file
+            fileSystemWatcherDevicesDB.Path = Directory.GetParent(devicesDBPath).ToString();
             fileSystemWatcherDevicesDB.Filter = Path.GetFileName(devicesDBPath);
-            DevicesControls(devices_lst);
+            ResetForm();
         }
+
         private void fileSystemWatcherWatch_Changed(object sender, FileSystemEventArgs e)
         {
             ChangesDetected();
         }
+
+        private void buttonAboutfrm_Click(object sender, EventArgs e)
+        {
+            frmAbout aboutfrm = new frmAbout(APP_VERSION);
+            aboutfrm.Show();
+        }
+
     }
 }

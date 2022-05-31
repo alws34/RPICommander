@@ -35,6 +35,7 @@ namespace RPICommander
             this.label2 = new System.Windows.Forms.Label();
             this.textBoxCommand = new System.Windows.Forms.TextBox();
             this.btnSaveCommand = new System.Windows.Forms.Button();
+            this.btnDeleteCommand = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -79,11 +80,22 @@ namespace RPICommander
             this.btnSaveCommand.UseVisualStyleBackColor = true;
             this.btnSaveCommand.Click += new System.EventHandler(this.btnSaveCommand_Click);
             // 
+            // btnDeleteCommand
+            // 
+            this.btnDeleteCommand.Location = new System.Drawing.Point(3, 65);
+            this.btnDeleteCommand.Name = "btnDeleteCommand";
+            this.btnDeleteCommand.Size = new System.Drawing.Size(103, 23);
+            this.btnDeleteCommand.TabIndex = 5;
+            this.btnDeleteCommand.Text = "Delete  Command";
+            this.btnDeleteCommand.UseVisualStyleBackColor = true;
+            this.btnDeleteCommand.Click += new System.EventHandler(this.btnDeleteCommand_Click);
+            // 
             // frmAddCommand
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(370, 94);
+            this.Controls.Add(this.btnDeleteCommand);
             this.Controls.Add(this.btnSaveCommand);
             this.Controls.Add(this.textBoxCommand);
             this.Controls.Add(this.label2);
@@ -104,5 +116,6 @@ namespace RPICommander
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textBoxCommand;
         private System.Windows.Forms.Button btnSaveCommand;
+        private System.Windows.Forms.Button btnDeleteCommand;
     }
 }

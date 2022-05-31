@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace RPICommander
 {
-    internal class Command
+    public class Command
     {
         string command_name;
         string command_description;
@@ -16,14 +16,14 @@ namespace RPICommander
             this.Command_name = command_name;
             this.Command_description = command_description;
         }
-
+        public Command() { }
 
         public string Command_name { get => command_name; set => command_name = value; }
         public string Command_description { get => command_description; set => command_description = value; }
 
         public override string ToString()
         {
-            return $"{this.Command_name}^{this.Command_description}";
+            return $"{Command_name}^{Command_description}";
         }
     }
 }

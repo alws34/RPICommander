@@ -34,14 +34,17 @@ namespace RPICommander
             this.label1 = new System.Windows.Forms.Label();
             this.listBoxCommands = new System.Windows.Forms.ListBox();
             this.listBoxDevices = new System.Windows.Forms.ListBox();
+            this.fileSystemWatcherDevice = new System.IO.FileSystemWatcher();
+            this.fileSystemWatcherCommands = new System.IO.FileSystemWatcher();
+            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcherDevice)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcherCommands)).BeginInit();
             this.SuspendLayout();
             // 
             // btnSaveChanges
             // 
-            this.btnSaveChanges.Location = new System.Drawing.Point(169, 224);
-            this.btnSaveChanges.Margin = new System.Windows.Forms.Padding(4);
+            this.btnSaveChanges.Location = new System.Drawing.Point(127, 182);
             this.btnSaveChanges.Name = "btnSaveChanges";
-            this.btnSaveChanges.Size = new System.Drawing.Size(115, 28);
+            this.btnSaveChanges.Size = new System.Drawing.Size(86, 23);
             this.btnSaveChanges.TabIndex = 37;
             this.btnSaveChanges.Text = "Save Changes";
             this.btnSaveChanges.UseVisualStyleBackColor = true;
@@ -50,56 +53,67 @@ namespace RPICommander
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(233, 16);
-            this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label2.Location = new System.Drawing.Point(175, 13);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(51, 17);
+            this.label2.Size = new System.Drawing.Size(41, 13);
             this.label2.TabIndex = 34;
             this.label2.Text = "Device";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(16, 16);
-            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+            this.label1.Location = new System.Drawing.Point(12, 13);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(78, 17);
+            this.label1.Size = new System.Drawing.Size(59, 13);
             this.label1.TabIndex = 33;
             this.label1.Text = "Commands";
             // 
             // listBoxCommands
             // 
             this.listBoxCommands.FormattingEnabled = true;
-            this.listBoxCommands.ItemHeight = 16;
-            this.listBoxCommands.Location = new System.Drawing.Point(19, 37);
+            this.listBoxCommands.Location = new System.Drawing.Point(14, 30);
+            this.listBoxCommands.Margin = new System.Windows.Forms.Padding(2);
             this.listBoxCommands.Name = "listBoxCommands";
-            this.listBoxCommands.Size = new System.Drawing.Size(200, 180);
+            this.listBoxCommands.Size = new System.Drawing.Size(151, 147);
             this.listBoxCommands.Sorted = true;
             this.listBoxCommands.TabIndex = 38;
             // 
             // listBoxDevices
             // 
             this.listBoxDevices.FormattingEnabled = true;
-            this.listBoxDevices.ItemHeight = 16;
-            this.listBoxDevices.Location = new System.Drawing.Point(236, 37);
+            this.listBoxDevices.Location = new System.Drawing.Point(177, 30);
+            this.listBoxDevices.Margin = new System.Windows.Forms.Padding(2);
             this.listBoxDevices.Name = "listBoxDevices";
-            this.listBoxDevices.Size = new System.Drawing.Size(219, 180);
+            this.listBoxDevices.Size = new System.Drawing.Size(165, 147);
             this.listBoxDevices.Sorted = true;
             this.listBoxDevices.TabIndex = 39;
             // 
+            // fileSystemWatcherDevice
+            // 
+            this.fileSystemWatcherDevice.EnableRaisingEvents = true;
+            this.fileSystemWatcherDevice.SynchronizingObject = this;
+            this.fileSystemWatcherDevice.Changed += new System.IO.FileSystemEventHandler(this.fileSystemWatcher_Changed);
+            // 
+            // fileSystemWatcherCommands
+            // 
+            this.fileSystemWatcherCommands.EnableRaisingEvents = true;
+            this.fileSystemWatcherCommands.SynchronizingObject = this;
+            this.fileSystemWatcherCommands.Changed += new System.IO.FileSystemEventHandler(this.fileSystemWatcher_Changed);
+            // 
             // frmEditDBs
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(487, 277);
+            this.ClientSize = new System.Drawing.Size(365, 225);
             this.Controls.Add(this.listBoxDevices);
             this.Controls.Add(this.listBoxCommands);
             this.Controls.Add(this.btnSaveChanges);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "frmEditDBs";
             this.Text = "Edit DB";
+            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcherDevice)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcherCommands)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -112,5 +126,7 @@ namespace RPICommander
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ListBox listBoxCommands;
         private System.Windows.Forms.ListBox listBoxDevices;
+        private System.IO.FileSystemWatcher fileSystemWatcherDevice;
+        private System.IO.FileSystemWatcher fileSystemWatcherCommands;
     }
 }
