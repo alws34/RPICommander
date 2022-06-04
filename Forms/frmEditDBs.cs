@@ -1,40 +1,46 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-
-namespace RPICommander
+﻿namespace RPICommander
 {
     public partial class frmEditDBs : Form
     {
         private List<Command> commands = new List<Command>();
         private List<Device> devices = new List<Device>();
-        string devicesDBpath, commandsDBpath, current_device, current_command_name;
+        string devicesDBpath, commandsDBpath, current_device;
 
-        public delegate void EventHandler_sendMessageToConsole(string msg);
-        public event EventHandler_sendMessageToConsole sendMessageToConsole = delegate { };
+      
+        public event SendMessageToConsoleEventHandler SendMessageToConsole;
+
+        protected virtual void OnSendMessageToConsoleEvent(string msg)
+        {
+            SendMessageToConsole?.Invoke(new SendMessageToConsoleEventArgs(msg));
+        }
+
+        public event SetPlaceHolderEventHandler SetPlaceHolder;
+        protected virtual void OnTBFocusChange(TextBox tb)
+        {
+            SetPlaceHolder?.Invoke(new SetPlaceHolderEventArgs(tb));
+        }
 
         public frmEditDBs(string devicesdb, string commandsdb)
         {
             InitializeComponent();
-            init();
+            Init();
+            devicesDBpath = devicesdb;
+            commandsDBpath = commandsdb;
+            CenterToScreen();
+        }
+        public frmEditDBs(string devicesdb, string commandsdb, bool isEmpty)
+        {
+            InitializeComponent();
             devicesDBpath = devicesdb;
             commandsDBpath = commandsdb;
             CenterToScreen();
         }
 
-        private void init()
+        public void Init()
         {
             string dirpath = @"C:\ProgramData\RPI Commander";
             string commandsDB = dirpath + @"\commands.dat";
             string devicesDB = dirpath + @"\devices.dat";
-
             // read commands from DB
             if (File.Exists(commandsDB))
             {
@@ -85,17 +91,24 @@ namespace RPICommander
                 using (StreamReader sr = new StreamReader(db))
                 {
                     string line;
+                    int counter = 0;
                     while ((line = sr.ReadLine()) != null)
                     {
                         string[] keyvalue = line.Split('^');
-                        if (keyvalue.Length == 2)
-                            commands.Add(new Command(keyvalue[0], keyvalue[1]));
+                        if (keyvalue.Length != 2)
+                        {
+                            OnSendMessageToConsoleEvent($"Error Reading Command from DB: {keyvalue}");
+                            continue;
+                        }
+                        counter++;
+                        commands.Add(new Command(keyvalue[0], keyvalue[1]));
                     }
+                    OnSendMessageToConsoleEvent($"Read {counter} Commands from DB.");
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString());
+                OnSendMessageToConsoleEvent($"Error Reading Commands from DB\n\t{e}");
             }
         }
 
@@ -106,29 +119,46 @@ namespace RPICommander
                 using (StreamReader sr = new StreamReader(db))
                 {
                     string line;
+                    int counter = 0;
                     while ((!string.IsNullOrWhiteSpace(line = sr.ReadLine())))
                     {
                         string[] dev = line.Split('^');
+                        if (dev.Length != 4)
+                        {
+                            OnSendMessageToConsoleEvent($"Error Reading from DB: {dev}");
+                            continue;
+                        }
+                        counter++;
                         Device device = new Device(dev[0], dev[1], dev[2], int.Parse(dev[3]));
                         devices.Add(device);
                     }
+                    OnSendMessageToConsoleEvent($"Read {counter} Devices from DB.");
                 }
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.ToString());
+                OnSendMessageToConsoleEvent($"Error Reading Devices from DB\n\t{e}");
             }
         }
 
         private void saveChanges()
         {
-            using (StreamWriter sw = new StreamWriter(devicesDBpath))
-                foreach (Device device in devices)
-                    sw.WriteLine(device.ToString());
+            try
+            {
+                using (StreamWriter sw = new StreamWriter(devicesDBpath))
+                    foreach (Device device in devices)
+                        sw.WriteLine(device.ToString());
 
-            using (StreamWriter sw = new StreamWriter(devicesDBpath))
-                foreach (Command cmd in commands)
-                    sw.WriteLine(cmd.ToString());
+                using (StreamWriter sw = new StreamWriter(devicesDBpath))
+                    foreach (Command cmd in commands)
+                        sw.WriteLine(cmd.ToString());
+            }
+            catch (Exception e)
+            {
+                OnSendMessageToConsoleEvent($"Error Saving to DB!\n\t{e}");
+                return;
+            }
+            OnSendMessageToConsoleEvent($"Changes Saved Successfully");
         }
 
         private void SetFileSystemWatcher()
@@ -143,6 +173,7 @@ namespace RPICommander
         {
             listBoxDevices.Items.Clear();
             listBoxCommands.Items.Clear();
+            OnSendMessageToConsoleEvent($"FORM CLEARED!");
         }
 
         private void fileSystemWatcher_Changed(object sender, FileSystemEventArgs e)
@@ -152,38 +183,38 @@ namespace RPICommander
             commandsControls(commands);
         }
 
-        private void listBoxCommands_DoubleClick(object sender, EventArgs e)//double click event on commands list item
+        private void listBoxCommands_DoubleClick(object sender, EventArgs e)
         {
             Command current_command = (Command)listBoxCommands.SelectedItem;
             if (current_command != null)
             {
-                //for (int i = 0; i < commands.Count; i++)
-                //    if (commands[i].Command_name == current_command.Command_name)
-                //        commands.RemoveAt(i);
-
                 listBoxCommands.Items.RemoveAt(listBoxCommands.SelectedIndex);
-                frmAddCommand edit_command = new frmAddCommand(commandsDBpath, current_command, commands);
-                edit_command.Show();
-                Dispose();
+                frmAddCommand frmEditCommand = new frmAddCommand(commandsDBpath, current_command, commands);
+                frmEditCommand.SendMessageToConsole += SendMessageToConsole;
+                frmEditCommand.SetPlaceHolder += SetPlaceHolder;
+                OnSendMessageToConsoleEvent($"Editing command {current_command}...");
+                frmEditCommand.Show();
+                //Dispose();
             }
         }
 
-        private void listBoxDevices_DoubleClick(object sender, EventArgs e)//double click event on devicess list item
+        private void listBoxDevices_DoubleClick(object sender, EventArgs e)
         {
             current_device = listBoxDevices.SelectedItem.ToString();
             Device device = new Device();
             if (current_device != null)
             {
-                for (int x = devices.Count - 1; x > -1; x--)
-                {
-                    if (devices[x].Device_Hostname == current_device)
-                        device = devices[x];
-                }
+                for (int i = devices.Count - 1; i > -1; i--)
+                    if (devices[i].Device_Hostname == current_device)
+                        device = devices[i];
 
                 listBoxDevices.Items.RemoveAt(listBoxDevices.SelectedIndex);
-                frmAddDevice edit_device = new frmAddDevice(devicesDBpath, current_device);
-                //edit_device.sendMessageToConsole += sendMessageToConsole;
-                edit_device.Show();
+                frmAddDevice frmEditDevice = new frmAddDevice(devicesDBpath, current_device);
+                frmEditDevice.SendMessageToConsole += SendMessageToConsole;
+                frmEditDevice.SetPlaceHolder += SetPlaceHolder;
+                OnSendMessageToConsoleEvent($"Editing device {current_device}...");
+                frmEditDevice.Text = $"Edit Device {current_device}";
+                frmEditDevice.Show();
                 //Dispose();
             }
         }

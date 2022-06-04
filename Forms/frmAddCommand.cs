@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows.Forms;
-
-namespace RPICommander
+﻿namespace RPICommander
 {/*this form adds or edits commands*/
     public partial class frmAddCommand : Form
     {
@@ -15,36 +10,52 @@ namespace RPICommander
 
         public string CommandsDBpath { get => commandsDBpath; set => commandsDBpath = value; }
 
-        public delegate void EventHandler_sendMessageToConsole(string msg);
-        public event EventHandler_sendMessageToConsole sendMessageToConsole = delegate { };
+        public event SendMessageToConsoleEventHandler SendMessageToConsole;
+        public event SetPlaceHolderEventHandler SetPlaceHolder;
+        protected virtual void OnTBFocusChange(TextBox tb)
+        {
+            SetPlaceHolder?.Invoke(new SetPlaceHolderEventArgs(tb));
+        }
+        protected virtual void OnSendMessageToConsoleEvent(string msg)
+        {
+            SendMessageToConsole?.Invoke(new SendMessageToConsoleEventArgs(msg));
+        }
 
-        public delegate void SetPlaceHolderDelegate(TextBox tb);
-        public SetPlaceHolderDelegate SetPlaceHolderCallback;
 
         public frmAddCommand(string commandsDBpath)
         {
             InitializeComponent();
             CommandsDBpath = commandsDBpath;
             SetTags();
+            SetText();
+            SetEvents();
             CenterToScreen();
+
         }
 
         public frmAddCommand(string path, Command command, List<Command> command_lst)
         {
             InitializeComponent();
             SetTags();
+            SetEvents();
             commandsDBpath = path;
             edit_mode = true;
             commandslst = command_lst;
             SetGui(command);
             SetEdittedCommand(command);
-            sendMessageToConsole($"Editing command: {command.Command_name}");
-            sendMessageToConsole($"Read {commandslst.Count} commands from DB:\n");
+            OnSendMessageToConsoleEvent($"Editing command: {command.Command_name}");
+            OnSendMessageToConsoleEvent($"Read {commandslst.Count} commands from DB:\n");
             CenterToScreen();
             PrintCommands();
         }
 
-
+        private void SetEvents()
+        {
+            textBoxCommand.GotFocus += IsFocused;
+            textBoxCommand.LostFocus += IsFocused;
+            textBoxCommandName.GotFocus += IsFocused;
+            textBoxCommandName.LostFocus += IsFocused;
+        }
 
         private void SetGui(Command command)
         {
@@ -65,16 +76,20 @@ namespace RPICommander
 
         private void SetTags()
         {
-            textBoxCommandName.Tag = "Enter Command name Here"                                                                                              ;                     
-            textBoxCommand.Tag = "Enter command Here";
-            textBoxCommand.GotFocus += SetPlaceHolder;
-
+            textBoxCommandName.Tag = "Enter Command name Here";
+            textBoxCommand.Tag = "Enter Command Here";
         }
-
+       
+        private void SetText()
+        {
+            textBoxCommandName.Text = textBoxCommandName.Tag.ToString();
+            textBoxCommand.Text = textBoxCommand.Tag.ToString();
+        }
+     
         private void PrintCommands()
         {
             foreach (Command cmd in commandslst)
-                sendMessageToConsole($"\t{cmd.ToString().Replace(delimiter, ": ")}");
+                OnSendMessageToConsoleEvent($"\t{cmd.ToString().Replace(delimiter, ": ")}");
         }
 
         private void ReadCommandsFromDB(Command command)
@@ -95,7 +110,7 @@ namespace RPICommander
                             {
                                 textBoxCommandName.Text = lines[0];
                                 textBoxCommand.Text = lines[1];
-                                sendMessageToConsole($"Editing command: {lines[0]}");
+                                OnSendMessageToConsoleEvent($"Editing command: {lines[0]}");
                             }
                         }
                         else
@@ -108,8 +123,7 @@ namespace RPICommander
             catch (Exception e)
             {
                 string msg = $"Error Reading commands from DB\n\t\t{e.Message}";
-                ShowMessageBox(msg);
-                sendMessageToConsole(msg);
+                OnSendMessageToConsoleEvent(msg);
             }
         }
 
@@ -132,33 +146,31 @@ namespace RPICommander
             Dispose();
         }
 
-        private void SetPlaceHolder(TextBox tb)
-        {
-            if (!tb.InvokeRequired)
-            {
-                if (!tb.Focused)
-                {
-                    if (string.IsNullOrWhiteSpace(tb.Text))
-                        tb.Text = tb.Tag.ToString();
-                    return;
-                }
-                if (tb.Text == tb.Tag.ToString())
-                    tb.Text = "";
-                return;
-            }
-            SetPlaceHolderDelegate call = new SetPlaceHolderDelegate(SetPlaceHolder);
-            tb.BeginInvoke(call, tb);
-        }
-
         private void btnDeleteCommand_Click(object sender, EventArgs e)
         {
             for (int i = 0; i < commandslst.Count; i++)
             {
-                if(commandslst[i].Command_name == textBoxCommandName.Text && commandslst[i].Command_description == textBoxCommand.Text)
+                if (commandslst[i].Command_name == textBoxCommandName.Text && commandslst[i].Command_description == textBoxCommand.Text)
                 {
                     commandslst.RemoveAt(i);
                     Dispose();
                 }
+            }
+        }
+
+        private void IsFocused(object sender, EventArgs e)
+        {
+            string sender_name = sender.GetType().Name;
+            switch (sender_name)
+            {
+                case "TextBox":
+                    TextBox? tb = sender as TextBox;
+                    if (tb != null)
+                        OnTBFocusChange(tb);
+                    break;
+                default:
+                    OnSendMessageToConsoleEvent($"Sender wasn't a TextBox @frmAddDevice - IsFocused: {sender_name}");
+                    break;
             }
         }
     }

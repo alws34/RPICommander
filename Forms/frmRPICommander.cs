@@ -1,36 +1,21 @@
 ﻿using Renci.SshNet;
 using RPICommander.Forms;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace RPICommander
 {
     public partial class FrmRPICommander : Form
     {
-        private const string APP_VERSION = "2.0.3";
+        private const string APP_VERSION = "2.1.0";
         private const int DEFAULT_SSH_PORT = 22;
-        string commandsDBPath;
-        private string devicesDBPath;
-        private int lastX;
-        private int lastY;
+        private string commandsDBPath = "";
+        private string devicesDBPath = "";
+        private string logPath = "";
+        private int lastX = 0;
+        private int lastY = 0;
         private List<Device> devices_lst = new List<Device>() { };
         private List<Command> commands_lst = new List<Command>() { };
         private List<Command> selected_commands = new List<Command>();
         private List<CheckBox> selected_devices = new List<CheckBox>();
-
-        public delegate void sendMessageToConsoleDelegate(string value);
-        public sendMessageToConsoleDelegate sendMessageToConsoleCallback;
-
-        
 
         public FrmRPICommander()
         {
@@ -43,9 +28,10 @@ namespace RPICommander
 
         private void Init()
         {
-            string dirpath = @"C:\ProgramData\RPI Commander";
-            commandsDBPath = dirpath + @"\commands.dat";
-            devicesDBPath = dirpath + @"\devices.dat";
+            string dirpath = "C:\\ProgramData\\RPI Commander";
+            commandsDBPath = dirpath + "\\commands.dat";
+            devicesDBPath = dirpath + "\\devices.dat";
+            logPath = dirpath + "\\Log.txt";
             flpCommands.AutoScroll = true;
             CreateDir(dirpath);
 
@@ -54,7 +40,7 @@ namespace RPICommander
             else
             {
                 CreateFile(commandsDBPath);
-                AddNewCommandForm(commandsDBPath);
+                AddNewCommandForm();
             }
 
             if (File.Exists(devicesDBPath))
@@ -124,12 +110,12 @@ namespace RPICommander
             }
             catch (IOException ioe)
             {
-                sendMessageToConsole($"{ioe}\nResetting Form");
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"{ioe}\nResetting Form"));
                 ResetForm();
             }
             catch (ArgumentException e)
             {
-                sendMessageToConsole($"{e}");
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"{e}"));
                 return;
             }
         }
@@ -172,7 +158,7 @@ namespace RPICommander
             }
             catch (ArgumentException e)
             {
-                sendMessageToConsole($"{e}");
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"{e}"));
                 return;
             }
         }
@@ -187,7 +173,7 @@ namespace RPICommander
             catch (Exception e)
             {
                 ShowMessageBox($"{e}");
-                sendMessageToConsole($"{e}");
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"{e}"));
             }
         }
 
@@ -204,38 +190,13 @@ namespace RPICommander
             catch (Exception e)
             {
                 ShowMessageBox($"{e}");
-                sendMessageToConsole($"{e}");
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"{e}"));
             }
-        }
-
-        private void AddNewDeviceForm(string devicesDB)
-        {
-            frmAddDevice add_device = new frmAddDevice(devicesDBPath);
-            add_device.sendMessageToConsole += sendMessageToConsole;
-            add_device.Show();
-        }
-
-        private void AddNewCommandForm(string commandsDB)
-        {
-            frmAddCommand addcommand = new frmAddCommand(commandsDB);
-            addcommand.sendMessageToConsole += sendMessageToConsole;
-            addcommand.Show();
         }
 
         private void ShowMessageBox(string msg, string caption = "Error", MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.Error)
         {
             MessageBox.Show(msg, caption, buttons, icon);
-        }
-
-        private void sendMessageToConsole(string msg)
-        {
-            if (!textBoxConsole.InvokeRequired)
-            {
-                textBoxConsole.AppendText(msg);
-                return;
-            }
-            sendMessageToConsoleDelegate call = new sendMessageToConsoleDelegate(sendMessageToConsole);
-            textBoxConsole.BeginInvoke(call, msg);
         }
 
         private void ResetForm()
@@ -247,122 +208,6 @@ namespace RPICommander
             commands_lst.Clear();
             textBoxConsole.Clear();
             Init();
-        }
-
-        private void CheckBox_CheckedChanged(object sender, EventArgs e)
-        {
-            CheckBox c = sender as CheckBox;
-            if (c != null)
-            {
-                if (c.Checked)
-                    selected_commands.Add((Command)c.Tag);
-                else
-                    selected_commands.Remove((Command)c.Tag);
-            }
-            else
-            {
-                sendMessageToConsole($"Sender was not a CheckBox! @CheckBox_CheckedChanged");
-            }
-
-        }
-
-        private void Cb_CheckedChanged(object sender, EventArgs e)
-        {
-            CheckBox c = (CheckBox)sender;
-            if (c.Checked)
-                selected_devices.Add(c);
-            else
-                selected_devices.Remove(c);
-
-        }
-
-        private void Start(object sender, EventArgs e)
-        {
-            if (!(selected_commands.Count > 0))
-            {
-                sendMessageToConsole($"\r\nNo Commands Selected\r\n");
-                return;
-            }
-
-            foreach (CheckBox c in selected_devices)
-            {
-                Device device = c.Tag as Device;
-                if (device == null)
-                {
-                    sendMessageToConsole($"Error Casting Device! @BtnStart_Click");
-                    continue;
-                }
-                using (var client = new SshClient(device.Device_Hostname, device.Port, device.User_name, device.Password))
-                {
-                    try
-                    {
-                        client.Connect();
-
-                        if (!client.IsConnected)
-                        {
-                            sendMessageToConsole($"couldn't connect to client {device.Device_Hostname} over port {device.Port}\n");
-                            continue;
-                        }
-                        sendMessageToConsole($"\r\nconnected to client {device.Device_Hostname} over port {device.Port}\n");
-
-                        foreach (Command command in selected_commands)
-                        {
-                            SshCommand cmd = client.CreateCommand(command.Command_description);
-                            string result = cmd.Execute();
-                            StreamReader reader = new StreamReader(cmd.ExtendedOutputStream);
-                            string stderr = reader.ReadToEnd();
-
-                            sendMessageToConsole($"\r\n\tExecuted command ''{command.Command_description}'' on {device.Device_Hostname}\r\n");
-
-                            if (!string.IsNullOrWhiteSpace(result))
-                                sendMessageToConsole($"\tCommand output: {result}\n");
-                            if (!string.IsNullOrWhiteSpace(stderr))
-                                sendMessageToConsole($"\t{stderr}\n");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        sendMessageToConsole($"\r{ex.ToString()}");
-                        return;
-                    }
-                    client.Disconnect();
-                }
-            }
-        }
-
-        protected void BtnAddDevice_Click(object sender, EventArgs e)
-        {
-            AddNewDeviceForm(devicesDBPath);
-        }
-
-        protected void BtnAddCommand_Click(object sender, EventArgs e)
-        {
-            AddNewCommandForm(commandsDBPath);
-        }
-
-        protected void BtnEditDB_Click(object sender, EventArgs e)
-        {
-            frmEditDBs editdb = new frmEditDBs(devicesDBPath, commandsDBPath);
-            editdb.sendMessageToConsole += sendMessageToConsole;
-            editdb.Show();
-        }
-
-        private void BtnReset_Click(object sender, EventArgs e)
-        {
-            ResetForm();
-        }
-
-        private void FlpDevices_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (e.X != lastX || e.Y != lastY)
-            {
-                CheckBox c = (CheckBox)sender;
-                toolTip1.IsBalloon = true;
-                toolTip1.SetToolTip(c, c.Text + "\n" + c.Name);
-
-                lastX = e.X;
-                lastY = e.Y;
-            }
         }
 
         private void ChangesDetected()
@@ -380,6 +225,7 @@ namespace RPICommander
         {
             fileSystemWatcherCommandsWatch.Path = Directory.GetParent(commandsDBPath).ToString();
             fileSystemWatcherDevicesDB.Filter = Path.GetFileName(commandsDBPath);
+            fileSystemWatcherDevicesDB.Changed += new System.IO.FileSystemEventHandler(fileSystemWatcherWatch_Changed);
             ResetForm();
         }
 
@@ -387,12 +233,101 @@ namespace RPICommander
         {
             fileSystemWatcherDevicesDB.Path = Directory.GetParent(devicesDBPath).ToString();
             fileSystemWatcherDevicesDB.Filter = Path.GetFileName(devicesDBPath);
+            fileSystemWatcherDevicesDB.Changed += new System.IO.FileSystemEventHandler(fileSystemWatcherWatch_Changed);
             ResetForm();
+        }
+
+        /*Form Creation*/
+        private void AddNewDeviceForm(string devicesDB)
+        {
+            frmAddDevice frmAddDevice = new frmAddDevice(devicesDBPath);
+            frmAddDevice.SendMessageToConsole += SendMessageToConsole;
+            frmAddDevice.SetPlaceHolder += SetTBPlaceHolder;
+            frmAddDevice.Show();
+        }
+
+        private void AddNewCommandForm()
+        {
+            frmAddCommand frmAddComand = new frmAddCommand(devicesDBPath);
+            frmAddComand.SendMessageToConsole += SendMessageToConsole;
+            frmAddComand.SetPlaceHolder += SetTBPlaceHolder;
+            frmAddComand.Show();
+        }
+
+        private void StartEdit()
+        {
+            frmEditDBs frmEditDB = new frmEditDBs(devicesDBPath, commandsDBPath, true);
+            frmEditDB.SendMessageToConsole += SendMessageToConsole;
+            frmEditDB.SetPlaceHolder += SetTBPlaceHolder;
+            frmEditDB.Init();
+            frmEditDB.Show();
+        }
+
+        /*Events*/
+        private void fileSystemWatcherLogFile_Changed(object sender, FileSystemEventArgs e)
+        {
+            Thread.Sleep(1000);
+            using (StreamReader sr = new StreamReader(logPath))
+                SendMessageToConsole(new SendMessageToConsoleEventArgs(sr.ReadToEnd()));
         }
 
         private void fileSystemWatcherWatch_Changed(object sender, FileSystemEventArgs e)
         {
             ChangesDetected();
+        }
+
+        private void StartSSH(object sender, EventArgs e)
+        {
+            if (!(selected_commands.Count > 0))
+            {
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"\r\nNo Commands Selected\r\n"));
+                return;
+            }
+
+            foreach (CheckBox c in selected_devices)
+            {
+                Device? device = c.Tag as Device;
+                if (device == null)
+                {
+                    SendMessageToConsole(new SendMessageToConsoleEventArgs($"Error Casting Device! @BtnStart_Click"));
+                    continue;
+                }
+                using (var client = new SshClient(device.Device_Hostname, device.Port, device.User_name, device.Password))
+                {
+                    try
+                    {
+                        client.Connect();
+
+                        if (!client.IsConnected)
+                        {
+                            SendMessageToConsole(new SendMessageToConsoleEventArgs($"couldn't connect to client {device.Device_Hostname} over port {device.Port}\n"));
+                            continue;
+                        }
+                        SendMessageToConsole(new SendMessageToConsoleEventArgs($"\r\nconnected to client {device.Device_Hostname} over port {device.Port}\n"));
+
+                        foreach (Command command in selected_commands)
+                        {
+                            SshCommand cmd = client.CreateCommand(command.Command_description);
+                            string result = cmd.Execute();
+                            StreamReader reader = new StreamReader(cmd.ExtendedOutputStream);
+                            string stderr = reader.ReadToEnd();
+
+                            SendMessageToConsole(new SendMessageToConsoleEventArgs($"\r\n\tExecuted command ''{command.Command_description}'' on {device.Device_Hostname}\r\n"));
+
+                            if (!string.IsNullOrWhiteSpace(result))
+                                SendMessageToConsole(new SendMessageToConsoleEventArgs($"\tCommand output: {result}\n"));
+                            if (!string.IsNullOrWhiteSpace(stderr))
+                                SendMessageToConsole(new SendMessageToConsoleEventArgs($"\t{stderr}\n"));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        SendMessageToConsole(new SendMessageToConsoleEventArgs($"\r{ex.ToString()}"));
+                        return;
+                    }
+                    client.Disconnect();
+                }
+            }
         }
 
         private void buttonAboutfrm_Click(object sender, EventArgs e)
@@ -401,5 +336,85 @@ namespace RPICommander
             aboutfrm.Show();
         }
 
+        private void CheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox c = sender as CheckBox;
+            if (c != null)
+            {
+                if (c.Checked)
+                    selected_commands.Add((Command)c.Tag);
+                else
+                    selected_commands.Remove((Command)c.Tag);
+            }
+            else
+            {
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"Sender was not a CheckBox! @CheckBox_CheckedChanged"));
+            }
+
+        }
+
+        private void Cb_CheckedChanged(object sender, EventArgs e)
+        {
+            CheckBox c = (CheckBox)sender;
+            if (c.Checked)
+                selected_devices.Add(c);
+            else
+                selected_devices.Remove(c);
+
+        }
+
+        protected void BtnAddDevice_Click(object sender, EventArgs e)
+        {
+            AddNewDeviceForm(devicesDBPath);
+        }
+
+        protected void BtnAddCommand_Click(object sender, EventArgs e)
+        {
+            AddNewCommandForm();
+        }
+
+        protected void BtnEditDB_Click(object sender, EventArgs e)
+        {
+            StartEdit();
+        }
+
+        private void BtnReset_Click(object sender, EventArgs e)
+        {
+            ResetForm();
+        }
+
+        private void FlpDevices_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.X != lastX || e.Y != lastY)
+            {
+                CheckBox c = (CheckBox)sender;
+                toolTip1.IsBalloon = true;
+                toolTip1.SetToolTip(c,$"{c.Tag.ToString().Replace("^","\n")}");
+
+                lastX = e.X;
+                lastY = e.Y;
+            }
+        }
+
+
+        /*Delegated Methods*/
+        public void SetTBPlaceHolder(SetPlaceHolderEventArgs arg)
+        {
+            TextBox tb = arg.TB;
+            if (!tb.Focused)
+            {
+                if (string.IsNullOrWhiteSpace(tb.Text))
+                    tb.Text = tb.Tag.ToString();
+                return;
+            }
+            if (tb.Text == tb.Tag.ToString())
+                tb.Text = "";
+            return;
+        }
+
+        public void SendMessageToConsole(SendMessageToConsoleEventArgs arg)
+        {
+            textBoxConsole.AppendText($"{arg.Message}{Environment.NewLine}");
+        }
     }
 }

@@ -1,35 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using RPICommander;
-
-namespace RPICommander
+﻿namespace RPICommander
 {
     public partial class frmAddDevice : Form
     {
         private const string DEFAULT_SSH_PORT = "22";
         string devicesDBpath;
-        bool edit_mode = false;
         List<Device> deviceslst = new List<Device>();
         Device edit_device = new Device();
 
-        public delegate void EventHandler_sendMessageToConsole(string msg);
-        public event EventHandler_sendMessageToConsole sendMessageToConsole = delegate { };
+        public event SendMessageToConsoleEventHandler SendMessageToConsole;
 
-        public delegate void EventHandler_SetPlaceHolder(TextBox tb);
-        public event EventHandler_SetPlaceHolder SetPlaceHolder = delegate { };
+        protected virtual void OnSendMessageToConsoleEvent(string msg)
+        {
+            SendMessageToConsole?.Invoke(new SendMessageToConsoleEventArgs(msg));
+        }
+
+        public event SetPlaceHolderEventHandler SetPlaceHolder;
+        protected virtual void OnTBFocusChange(TextBox tb)
+        {
+            SetPlaceHolder?.Invoke(new SetPlaceHolderEventArgs(tb));
+        }
 
         public frmAddDevice(string devicesDBpath)
         {
             InitializeComponent();
             SetEvents();
+            SetTags();
+            SetText();
             DevicesDBPath = devicesDBpath;
             btnSaveDevices.Enabled = false;
             CenterToScreen();
@@ -39,13 +35,12 @@ namespace RPICommander
         {
             InitializeComponent();
             DevicesDBPath = devicesDBpath;
-            edit_mode = true;
             btnRemoveDevice.Visible = true;
             SetEvents();
+            SetTags();
             ReadDB(device_name);
             SetEditGui(edit_device);
             CenterToScreen();
-            sendMessageToConsole($"Editing device {device_name}...");
         }
 
         public string DevicesDBPath { get => devicesDBpath; set => devicesDBpath = value; }
@@ -62,25 +57,20 @@ namespace RPICommander
             textBoxDevicePort.Text = device.Port.ToString();
         }
 
+        private void SetText()
+        {
+            textBoxAddDeviceName.Text = textBoxAddDeviceName.Tag.ToString();
+        }
+
         private void SetEvents()
         {
             textBoxAddDeviceName.GotFocus += IsFocused;
             textBoxAddDeviceName.LostFocus += IsFocused;
-            textBoxAddDeviceName.Tag = "Enter device host name or ip(v4)";
         }
 
-        private void IsFocused(object sender, EventArgs e)
+        private void SetTags()
         {
-            string sendername = sender.GetType().Name;
-            switch (sendername)
-            {
-                case "TextBox":
-                    SetPlaceHolder((TextBox)sender);
-                    break;
-                default:
-                    sendMessageToConsole($"Sender wasn't a TextBox @frmAddDevice - IsFocused: {sendername}");
-                    break;
-            }
+            textBoxAddDeviceName.Tag = "Enter device host name or ip(v4)";
         }
 
         private void ReadDB(string device_name)
@@ -105,7 +95,7 @@ namespace RPICommander
             }
             catch (Exception e)
             {
-                sendMessageToConsole($"{e}");
+                OnSendMessageToConsoleEvent($"{e}");
             }
         }
 
@@ -116,7 +106,7 @@ namespace RPICommander
                 foreach (Device device in deviceslst)
                 {
                     sw.WriteLine(device.ToString());
-                    sendMessageToConsole($"\rAdded device ''{device.Device_Hostname.ToString()}'' to deviced DB\r\n");
+                    OnSendMessageToConsoleEvent($"\rAdded device ''{device.Device_Hostname.ToString().Replace("^", ": ")}'' to deviced DB\r\n");
                 }
             }
         }
@@ -135,7 +125,7 @@ namespace RPICommander
             if (IsEmpty(devicename))
             {
                 devicename = "Error - No Device Name Entered";
-                sendMessageToConsole(devicename);
+                OnSendMessageToConsoleEvent(devicename);
                 return null;
             }
             return new Device(devicename, GetUserName(), GetPassword(), int.Parse(GetPort()));
@@ -172,18 +162,18 @@ namespace RPICommander
             return IsEmpty(GetDeviceName()) && IsEmpty(GetUserName()) && IsEmpty(GetPassword()) && IsEmpty(GetPort());
         }
 
+        private void ShowErrors(string msg)
+        {
+            OnSendMessageToConsoleEvent(msg);
+            ShowMessageBox(msg);
+        }
+
         private string GetDeviceName()
         {
             if (textBoxAddDeviceName.Text != textBoxAddDeviceName.Tag.ToString())
                 return textBoxAddDeviceName.Text;
             ShowErrors($"Please Fill Device Name!");
             return null;
-        }
-
-        private void ShowErrors(string msg)
-        {
-            sendMessageToConsole(msg);
-            ShowMessageBox(msg);
         }
 
         private string GetUserName()
@@ -219,11 +209,12 @@ namespace RPICommander
                 listBoxDevices.Items.Clear();
         }
 
+
         private void buttonSaveDevices_Click(object sender, EventArgs e)
         {
             WriteToDeviceDB();
         }
-        
+
         private void buttonSaveDevice_Click(object sender, EventArgs e)
         {
             Device dev = GetCurrentDevice();
@@ -233,7 +224,7 @@ namespace RPICommander
             AddDeviceToDB();
             Dispose();
         }
-        
+
         private void buttonAddDeviceToList_Click(object sender, EventArgs e)
         {
             AddToList();
@@ -248,5 +239,22 @@ namespace RPICommander
             WriteToDeviceDB();
             Dispose();
         }
+
+        private void IsFocused(object sender, EventArgs e)
+        {
+            string sender_name = sender.GetType().Name;
+            switch (sender_name)
+            {
+                case "TextBox":
+                    TextBox? tb = sender as TextBox;
+                    if (tb != null)
+                        OnTBFocusChange(tb);
+                    break;
+                default:
+                    OnSendMessageToConsoleEvent($"Sender wasn't a TextBox @frmAddDevice - IsFocused: {sender_name}");
+                    break;
+            }
+        }
+
     }
 }
