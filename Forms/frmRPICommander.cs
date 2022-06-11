@@ -5,7 +5,7 @@ namespace RPICommander
 {
     public partial class FrmRPICommander : Form
     {
-        private const string APP_VERSION = "2.1.0";
+        private const string APP_VERSION = "2.1.1";
         private const int DEFAULT_SSH_PORT = 22;
         private string commandsDBPath = "";
         private string devicesDBPath = "";
@@ -35,40 +35,43 @@ namespace RPICommander
             flpCommands.AutoScroll = true;
             CreateDir(dirpath);
 
-            if (File.Exists(commandsDBPath))
-                ReadCommands(commandsDBPath);
-            else
-            {
-                CreateFile(commandsDBPath);
+            if (!CreateFile(commandsDBPath))
                 AddNewCommandForm();
-            }
-
-            if (File.Exists(devicesDBPath))
-                ReadDevices(devicesDBPath);
             else
-            {
-                CreateFile(devicesDBPath);
+                ReadCommands(commandsDBPath);
+
+            if (!CreateFile(devicesDBPath))
                 AddNewDeviceForm(devicesDBPath);
-            }
+            else
+                ReadDevices(devicesDBPath);
 
             CreateCommandsControls(commands_lst);
             CreateDevicesControls(devices_lst);
         }
 
+        private CheckBox CreateCheckBox(Color forecolor, Color backcolor, string name = "", string text = "")
+        {
+            CheckBox cb = new CheckBox
+            {
+                Name = name,
+                Text = text,
+                ForeColor = forecolor,
+                BackColor = backcolor,
+                Font = new Font(FontFamily.GenericSansSerif, (float)12.0, FontStyle.Bold),
+            };
+            cb.MouseMove += FlpDevices_MouseMove;
+            return cb;
+        }
         private void CreateCommandsControls(List<Command> commands)
         {
             foreach (Command command in commands)
             {
-                CheckBox cb = new CheckBox
-                {
-                    Name = command.Command_description,
-                    Text = command.Command_name,
-                    Tag = command
-                };
-                cb.CheckedChanged += CheckBox_CheckedChanged;
-                cb.MouseMove += FlpDevices_MouseMove;
 
+                CheckBox cb = CreateCheckBox(Color.White, Color.Black, command.Command_description, command.Command_name);
+                cb.Tag = command;
+                cb.CheckedChanged += CheckBoxCommand_CheckedChanged;
                 flpCommands.Controls.Add(cb);
+
             }
         }
 
@@ -76,13 +79,10 @@ namespace RPICommander
         {
             foreach (Device device in devices)
             {
-                CheckBox cb = new CheckBox
-                {
-                    Name = $"{device.User_name}^{device.Password}",
-                    Text = device.Device_Hostname,
-                    Tag = device
-                };
-                cb.CheckedChanged += Cb_CheckedChanged;
+                CheckBox cb = CreateCheckBox(Color.White, Color.Black, $"{device.User_name}^{device.Password}", device.Device_Hostname);
+                cb.Tag = device;
+                //cb.Font = new Font(cb.Font, FontStyle.Bold);
+                cb.CheckedChanged += CheckBoxDevice_CheckedChanged;
                 cb.MouseMove += FlpDevices_MouseMove;
 
                 flpDevices.Controls.Add(cb);
@@ -172,12 +172,12 @@ namespace RPICommander
             }
             catch (Exception e)
             {
-                ShowMessageBox($"{e}");
+                //ShowMessageBox($"{e}");
                 SendMessageToConsole(new SendMessageToConsoleEventArgs($"{e}"));
             }
         }
 
-        private void CreateFile(string path)
+        private bool CreateFile(string path)
         {
             try
             {
@@ -185,28 +185,32 @@ namespace RPICommander
                 {
                     var f = File.Create(path);
                     f.Close();
+                    return false;
                 }
             }
             catch (Exception e)
             {
-                ShowMessageBox($"{e}");
+                //ShowMessageBox($"{e}");
                 SendMessageToConsole(new SendMessageToConsoleEventArgs($"{e}"));
+                return false;
             }
+            return true;
         }
 
-        private void ShowMessageBox(string msg, string caption = "Error", MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.Error)
-        {
-            MessageBox.Show(msg, caption, buttons, icon);
-        }
+        //private void ShowMessageBox(string msg, string caption = "Error", MessageBoxButtons buttons = MessageBoxButtons.OK, MessageBoxIcon icon = MessageBoxIcon.Error)
+        //{
+        //    MessageBox.Show(msg, caption, buttons, icon);
+        //}
 
-        private void ResetForm()
+        private void ResetForm(bool clearconsole = true)
         {
             flpDevices.Enabled = true;
             flpCommands.Controls.Clear();
             flpDevices.Controls.Clear();
             devices_lst.Clear();
             commands_lst.Clear();
-            textBoxConsole.Clear();
+            if (clearconsole)
+                textBoxConsole.Clear();
             Init();
         }
 
@@ -259,18 +263,15 @@ namespace RPICommander
             frmEditDBs frmEditDB = new frmEditDBs(devicesDBPath, commandsDBPath, true);
             frmEditDB.SendMessageToConsole += SendMessageToConsole;
             frmEditDB.SetPlaceHolder += SetTBPlaceHolder;
-            frmEditDB.Init();
+            if (!frmEditDB.Init())
+            {
+                SendMessageToConsole(new SendMessageToConsoleEventArgs("Couldn't Start Editing! see error above."));
+                return;
+            }
             frmEditDB.Show();
         }
 
         /*Events*/
-        private void fileSystemWatcherLogFile_Changed(object sender, FileSystemEventArgs e)
-        {
-            Thread.Sleep(1000);
-            using (StreamReader sr = new StreamReader(logPath))
-                SendMessageToConsole(new SendMessageToConsoleEventArgs(sr.ReadToEnd()));
-        }
-
         private void fileSystemWatcherWatch_Changed(object sender, FileSystemEventArgs e)
         {
             ChangesDetected();
@@ -328,6 +329,7 @@ namespace RPICommander
                     client.Disconnect();
                 }
             }
+            ResetForm(false);
         }
 
         private void buttonAboutfrm_Click(object sender, EventArgs e)
@@ -336,7 +338,7 @@ namespace RPICommander
             aboutfrm.Show();
         }
 
-        private void CheckBox_CheckedChanged(object sender, EventArgs e)
+        private void CheckBoxCommand_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox c = sender as CheckBox;
             if (c != null)
@@ -353,7 +355,7 @@ namespace RPICommander
 
         }
 
-        private void Cb_CheckedChanged(object sender, EventArgs e)
+        private void CheckBoxDevice_CheckedChanged(object sender, EventArgs e)
         {
             CheckBox c = (CheckBox)sender;
             if (c.Checked)
@@ -389,13 +391,17 @@ namespace RPICommander
             {
                 CheckBox c = (CheckBox)sender;
                 toolTip1.IsBalloon = true;
-                toolTip1.SetToolTip(c,$"{c.Tag.ToString().Replace("^","\n")}");
+                toolTip1.SetToolTip(c, $"{c.Tag.ToString().Replace("^", "\n")}");
 
                 lastX = e.X;
                 lastY = e.Y;
             }
         }
 
+        private void btnClearConsole_Click(object sender, EventArgs e)
+        {
+            textBoxConsole.Text = "";
+        }
 
         /*Delegated Methods*/
         public void SetTBPlaceHolder(SetPlaceHolderEventArgs arg)
@@ -412,9 +418,19 @@ namespace RPICommander
             return;
         }
 
+        delegate void SendMessageToConsoleCallback(SendMessageToConsoleEventArgs txt);
         public void SendMessageToConsole(SendMessageToConsoleEventArgs arg)
         {
-            textBoxConsole.AppendText($"{arg.Message}{Environment.NewLine}");
+            if (!textBoxConsole.InvokeRequired)
+            {
+                textBoxConsole.AppendText($"{arg.Message}{Environment.NewLine}");
+                return;
+            }
+            else
+            {
+                SendMessageToConsoleCallback callback = new SendMessageToConsoleCallback(SendMessageToConsole);
+                textBoxConsole.Invoke(callback, arg);
+            }
         }
     }
 }

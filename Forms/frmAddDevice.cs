@@ -38,7 +38,16 @@
             btnRemoveDevice.Visible = true;
             SetEvents();
             SetTags();
-            ReadDB(device_name);
+            if (device_name == null)
+            {
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"No device name"));
+                Dispose();
+            }
+            if (!ReadDB(device_name))
+            {
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"Couldn't read Device from DB!"));
+                Dispose();
+            }
             SetEditGui(edit_device);
             CenterToScreen();
         }
@@ -50,7 +59,6 @@
             buttonAddDeviceToList.Enabled = false;
             btnSaveDevices.Enabled = false;
             listBoxDevices.Enabled = false;
-
             textBoxAddDeviceName.Text = device.Device_Hostname;
             textBoxdevicePassword.Text = device.Password;
             textBoxdeviceUsername.Text = device.User_name;
@@ -73,7 +81,7 @@
             textBoxAddDeviceName.Tag = "Enter device host name or ip(v4)";
         }
 
-        private void ReadDB(string device_name)
+        private bool ReadDB(string device_name)
         {
             try
             {
@@ -96,19 +104,28 @@
             catch (Exception e)
             {
                 OnSendMessageToConsoleEvent($"{e}");
+                return false;
             }
+            return true;
         }
 
         private void WriteToDeviceDB()
         {
-            using (StreamWriter sw = File.AppendText(DevicesDBPath))
+            try
             {
-                foreach (Device device in deviceslst)
+                using (StreamWriter sw = File.AppendText(DevicesDBPath))
                 {
-                    sw.WriteLine(device.ToString());
-                    OnSendMessageToConsoleEvent($"\rAdded device ''{device.Device_Hostname.ToString().Replace("^", ": ")}'' to deviced DB\r\n");
+                    foreach (Device device in deviceslst)
+                    {
+                        sw.WriteLine(device.ToString());
+                        OnSendMessageToConsoleEvent($"\rAdded device ''{device.Device_Hostname.ToString().Replace("^", ": ")}'' to deviced DB\r\n");
+                    }
                 }
+            }catch(Exception e)
+            {
+                SendMessageToConsole(new SendMessageToConsoleEventArgs($"{e}"));
             }
+            
         }
 
         private void AddDeviceToDB()
@@ -122,7 +139,7 @@
         {
             string devicename = GetDeviceName();
 
-            if (IsEmpty(devicename))
+            if (!IsEmpty(devicename))
             {
                 devicename = "Error - No Device Name Entered";
                 OnSendMessageToConsoleEvent(devicename);
@@ -134,8 +151,8 @@
         private bool IsEmpty(string str)
         {
             if (!string.IsNullOrWhiteSpace(str))
-                return false;
-            return true;
+                return true;
+            return false;
         }
 
         private void AddToList()
@@ -209,7 +226,6 @@
                 listBoxDevices.Items.Clear();
         }
 
-
         private void buttonSaveDevices_Click(object sender, EventArgs e)
         {
             WriteToDeviceDB();
@@ -255,6 +271,5 @@
                     break;
             }
         }
-
     }
 }
