@@ -234,8 +234,10 @@
         private void buttonSaveDevice_Click(object sender, EventArgs e)
         {
             Device dev = GetCurrentDevice();
+
             if (dev == null)
                 return;
+
             edit_device = dev;
             AddDeviceToDB();
             Dispose();
@@ -249,6 +251,13 @@
         private void btnRemoveDevice_Click(object sender, EventArgs e)
         {
             Device dev = GetCurrentDevice();
+
+            if (dev == null)
+            {
+                SendMessageToConsole(new SendMessageToConsoleEventArgs("NULL CURRENT DEVICE"));
+                return;
+            }
+
             for (int i = 0; i < deviceslst.Count; i++)
                 if (deviceslst[i].Equals(dev))
                     deviceslst.RemoveAt(i);
